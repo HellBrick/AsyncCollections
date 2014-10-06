@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncCollection.cs" />
+    <Compile Include="AsyncQueue.cs" />
+    <Compile Include="AsyncStack.cs" />
     <Compile Include="IAsyncCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
