@@ -10,13 +10,15 @@ using System.Threading.Tasks;
 namespace HellBrick.Collections
 {
 	/// <summary>
-	/// Represents a thread-safe queue that allows asynchronous consuming.
+	/// Represents a thread-safe collection that allows asynchronous consuming.
 	/// </summary>
-	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
-	public class AsyncQueue<T>: IAsyncCollection<T>
+	/// <typeparam name="TItem">The type of the items contained in the collection.</typeparam>
+	/// <typeparam name="TItemQueue">The type of the producer/consumer collection to use as an internal item storage.</typeparam>
+	public class AsyncCollection<TItem, TItemQueue>: IAsyncCollection<TItem>
+		where TItemQueue: IProducerConsumerCollection<TItem>, new()
 	{
-		private ConcurrentQueue<T> _itemQueue = new ConcurrentQueue<T>();
-		private ConcurrentQueue<TaskCompletionSource<T>> _awaiterQueue = new ConcurrentQueue<TaskCompletionSource<T>>();
+		private TItemQueue _itemQueue = new TItemQueue();
+		private ConcurrentQueue<TaskCompletionSource<TItem>> _awaiterQueue = new ConcurrentQueue<TaskCompletionSource<TItem>>();
 
 		//	_queueBalance < 0 means there are free awaiters and not enough items.
 		//	_queueBalance > 0 means the opposite is true.
@@ -37,7 +39,7 @@ namespace HellBrick.Collections
 		/// Adds an item to the collection.
 		/// </summary>
 		/// <param name="item">The item to add to the collection.</param>
-		public void Add( T item )
+		public void Add( TItem item )
 		{
 			while ( !TryAdd( item ) ) ;
 		}
@@ -48,22 +50,24 @@ namespace HellBrick.Collections
 		/// </summary>
 		/// <param name="item">The item to add to the collection.</param>
 		/// <returns>True if the item was added to the collection; false if the awaiter was cancelled and the operation must be retried.</returns>
-		private bool TryAdd( T item )
+		private bool TryAdd( TItem item )
 		{
 			long balanceAfterCurrentItem = Interlocked.Increment( ref _queueBalance );
+			SpinWait spin = new SpinWait();
 
 			if ( balanceAfterCurrentItem > 0 )
 			{
 				//	Items are dominating, so we can safely add a new item to the queue.
-				_itemQueue.Enqueue( item );
+				while ( !_itemQueue.TryAdd( item ) )
+					spin.SpinOnce();
+
 				return true;
 			}
 			else
 			{
 				//	There's at least one awaiter available or being added as we're speaking, so we're giving the item to it.
 
-				TaskCompletionSource<T> awaiter;
-				SpinWait spin = new SpinWait();
+				TaskCompletionSource<TItem> awaiter;
 
 				while ( !_awaiterQueue.TryDequeue( out awaiter ) )
 					spin.SpinOnce();
@@ -76,7 +80,7 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<T> TakeAsync()
+		public Task<TItem> TakeAsync()
 		{
 			return TakeAsync( CancellationToken.None );
 		}
@@ -84,7 +88,7 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<T> TakeAsync( CancellationToken cancellationToken )
+		public Task<TItem> TakeAsync( CancellationToken cancellationToken )
 		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
 
@@ -92,7 +96,7 @@ namespace HellBrick.Collections
 			{
 				//	Awaiters are dominating, so we can safely add a new awaiter to the queue.
 
-				var taskSource = new TaskCompletionSource<T>();
+				var taskSource = new TaskCompletionSource<TItem>();
 				_awaiterQueue.Enqueue( taskSource );
 
 				cancellationToken.Register(
@@ -100,7 +104,7 @@ namespace HellBrick.Collections
 					{
 						//	It's enough to call TrySetCancelled() here.
 						//	The balance correction will be taken care of in the Add() method that will retreive the current awaiter from the queue.
-						TaskCompletionSource<T> awaiter = state as TaskCompletionSource<T>;
+						TaskCompletionSource<TItem> awaiter = state as TaskCompletionSource<TItem>;
 						awaiter.TrySetCanceled();
 					},
 					taskSource,
@@ -112,10 +116,10 @@ namespace HellBrick.Collections
 			{
 				//	There's at least one item available or being added, so we're returning it directly.
 
-				T item;
+				TItem item;
 				SpinWait spin = new SpinWait();
 
-				while ( !_itemQueue.TryDequeue( out item ) )
+				while ( !_itemQueue.TryTake( out item ) )
 					spin.SpinOnce();
 
 				return Task.FromResult( item );
@@ -131,7 +135,7 @@ namespace HellBrick.Collections
 
 		#region IEnumerable<T> Members
 
-		public IEnumerator<T> GetEnumerator()
+		public IEnumerator<TItem> GetEnumerator()
 		{
 			return _itemQueue.GetEnumerator();
 		}
