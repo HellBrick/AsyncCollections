@@ -24,16 +24,15 @@ namespace HellBrick.Collections
 		//	_queueBalance > 0 means the opposite is true.
 		private long _queueBalance = 0;
 
-		#region Properties
+		#region IAsyncCollection<T> members
 
+		/// <summary>
+		/// Gets an amount of pending item requests.
+		/// </summary>
 		public int AwaiterCount
 		{
 			get { return _awaiterQueue.Count; }
 		}
-
-		#endregion
-
-		#region IAsyncCollection<T> members
 
 		/// <summary>
 		/// Adds an item to the collection.
