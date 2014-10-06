@@ -13,7 +13,7 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe queue that allows asynchronous consuming.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
-	public class AsyncQueue<T>: IEnumerable<T>, System.Collections.ICollection
+	public class AsyncQueue<T>: IAsyncCollection<T>
 	{
 		private ConcurrentQueue<T> _itemQueue = new ConcurrentQueue<T>();
 		private ConcurrentQueue<TaskCompletionSource<T>> _awaiterQueue = new ConcurrentQueue<TaskCompletionSource<T>>();
@@ -31,7 +31,7 @@ namespace HellBrick.Collections
 
 		#endregion
 
-		#region Methods
+		#region IAsyncCollection<T> members
 
 		/// <summary>
 		/// Adds an item to the collection.
