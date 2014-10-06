@@ -11,21 +11,23 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace HellBrick.Collections.Test
 {
 	[TestClass]
-	public class AsyncCollectionTest
+	public abstract class AsyncCollectionTest
 	{
-		private AsyncQueue<int> _collection;
+		private IAsyncCollection<int> _collection;
 
 		[TestInitialize]
 		public void Initialize()
 		{
-			_collection = new AsyncQueue<int>();
+			_collection = CreateCollection();
 		}
+
+		protected abstract IAsyncCollection<int> CreateCollection();
 
 		[TestMethod]
 		public void TakingItemFromNonEmptyCollectionCompletesImmediately()
 		{
 			_collection.Add( 42 );
-			var itemTask = _collection.TakeAsync();
+			var itemTask = _collection.TakeAsync( CancellationToken.None );
 			Assert.IsTrue( itemTask.IsCompleted );
 			Assert.AreEqual( 42, itemTask.Result );
 		}
@@ -33,7 +35,7 @@ namespace HellBrick.Collections.Test
 		[TestMethod]
 		public void AddingItemCompletesPendingTask()
 		{
-			var itemTask = _collection.TakeAsync();
+			var itemTask = _collection.TakeAsync( CancellationToken.None );
 			Assert.IsFalse( itemTask.IsCompleted );
 
 			_collection.Add( 42 );
@@ -74,7 +76,7 @@ namespace HellBrick.Collections.Test
 					{
 						while ( !cancelSource.IsCancellationRequested || itemsTaken < itemCount * producerThreads )
 						{
-							int item = await _collection.TakeAsync();
+							int item = await _collection.TakeAsync( CancellationToken.None );
 							Interlocked.Increment( ref itemsTaken );
 							Debug.WriteLine( "{0} ( - {1} by {2} )", _collection, item, consumerID );
 						}
@@ -108,6 +110,24 @@ namespace HellBrick.Collections.Test
 
 			await Task.WhenAll( consumerTasks );
 			Assert.AreEqual( 0, _collection.Count );
+		}
+	}
+
+	[TestClass]
+	public class AsyncQueueTest: AsyncCollectionTest
+	{
+		protected override IAsyncCollection<int> CreateCollection()
+		{
+			return new AsyncQueue<int>();
+		}
+	}
+
+	[TestClass]
+	public class AsyncStackTest: AsyncCollectionTest
+	{
+		protected override IAsyncCollection<int> CreateCollection()
+		{
+			return new AsyncStack<int>();
 		}
 	}
 }
