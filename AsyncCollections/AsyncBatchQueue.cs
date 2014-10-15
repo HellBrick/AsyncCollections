@@ -15,6 +15,9 @@ namespace HellBrick.Collections
 
 		public AsyncBatchQueue( int batchSize )
 		{
+			if ( batchSize <= 0 )
+				throw new ArgumentOutOfRangeException( "batchSize", batchSize, "Batch size must be a positive integer." );
+
 			_batchSize = batchSize;
 			_currentBatch = new Batch( this );
 		}
