@@ -10,7 +10,7 @@ namespace HellBrick.Collections
 	public class AsyncBatchQueue<T>
 	{
 		private int _batchSize;
-		private Batch _currentBatch;
+		private volatile Batch _currentBatch;
 		private AsyncQueue<IReadOnlyList<T>> _batchQueue = new AsyncQueue<IReadOnlyList<T>>();
 
 		public AsyncBatchQueue( int batchSize )
