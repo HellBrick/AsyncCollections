@@ -86,6 +86,10 @@ namespace HellBrick.Collections
 			{
 				_count = count;
 				_queue._currentBatch = new Batch( _queue );
+
+				//	The full fence ensures that the current batch will never be added to the queue before _count is set.
+				Thread.MemoryBarrier();
+
 				_queue._batchQueue.Add( this );
 			}
 
