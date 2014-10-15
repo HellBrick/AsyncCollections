@@ -79,7 +79,26 @@ namespace HellBrick.Collections
 
 			public bool TryFlush()
 			{
-				throw new NotImplementedException();
+				int expectedPreviousReservation = _lastReservationIndex;
+
+				//	We don't flush if the batch doesn't have any items.
+				//	However, we report success to avoid unnecessary spinning.
+				if ( expectedPreviousReservation < 0 )
+					return true;
+
+				int previousReservation = Interlocked.CompareExchange( ref _lastReservationIndex, _queue._batchSize, expectedPreviousReservation );
+
+				//	Flush reservation has succeeded.
+				if ( expectedPreviousReservation == previousReservation )
+				{
+					FlushInternal( previousReservation + 1 );
+					return true;
+				}
+
+				//	The following is true if someone has completed the batch by the time we tried to flush it.
+				//	Therefore the batch will be flushed anyway even if we don't do anything.
+				//	The opposite means someone has slipped in an update and we have to spin.
+				return previousReservation >= _queue._batchSize;
 			}
 
 			private void FlushInternal( int count )
