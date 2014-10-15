@@ -50,7 +50,7 @@ namespace HellBrick.Collections
 			private T[] _items;
 			private bool[] _finalizationFlags;
 			private int _lastReservationIndex = -1;
-			private int _count = 0;
+			private int _count = -1;
 
 			public Batch( AsyncBatchQueue<T> queue )
 			{
@@ -69,14 +69,10 @@ namespace HellBrick.Collections
 
 				//	The following is true if we've taken the last slot, which means we're obligated to flush the current batch and create a new one.
 				if ( index == _queue._batchSize - 1 )
-				{
-					_queue._currentBatch = new Batch( _queue );
-					_queue._batchQueue.Add( this );
-				}
+					FlushInternal( _queue._batchSize );
 
 				_items[ index ] = item;
 				_finalizationFlags[ index ] = true;
-				Interlocked.Increment( ref _count );
 
 				return true;
 			}
@@ -86,19 +82,18 @@ namespace HellBrick.Collections
 				throw new NotImplementedException();
 			}
 
-			private bool IsFinalized
+			private void FlushInternal( int count )
 			{
-				get { return _count == _queue._batchSize; }
+				_count = count;
+				_queue._currentBatch = new Batch( _queue );
+				_queue._batchQueue.Add( this );
 			}
 
 			private T GetItemWithoutValidation( int index )
 			{
-				if ( !IsFinalized )
-				{
-					SpinWait spin = new SpinWait();
-					while ( !_finalizationFlags[ index ] )
-						spin.SpinOnce();
-				}
+				SpinWait spin = new SpinWait();
+				while ( !_finalizationFlags[ index ] )
+					spin.SpinOnce();
 
 				return _items[ index ];
 			}
@@ -122,7 +117,7 @@ namespace HellBrick.Collections
 
 			public int Count
 			{
-				get { return _queue._batchSize; }
+				get { return _count; }
 			}
 
 			#endregion
