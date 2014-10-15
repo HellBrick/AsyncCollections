@@ -63,10 +63,11 @@ namespace HellBrick.Collections.Test
 			int itemsTaken = 0;
 			int itemCount = 100;
 			int producerThreads = 4;
+			int totalItemCount = itemCount * producerThreads;
 			int consumerThreads = 2;
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
 
-			List<Task> consumerTasks = new List<Task>();
+			List<Task> consumerTasks = new List<Task>();			
 
 			for ( int i = 0; i < consumerThreads; i++ )
 			{
@@ -74,11 +75,21 @@ namespace HellBrick.Collections.Test
 				var consumerTask = Task.Run(
 					async () =>
 					{
-						while ( !cancelSource.IsCancellationRequested || itemsTaken < itemCount * producerThreads )
+						try
 						{
-							int item = await _collection.TakeAsync( CancellationToken.None );
-							Interlocked.Increment( ref itemsTaken );
-							Debug.WriteLine( "{0} ( - {1} by {2} )", _collection, item, consumerID );
+							while ( itemsTaken < totalItemCount )
+							{
+								int item = await _collection.TakeAsync( cancelSource.Token );
+								int itemsTakenLocal = Interlocked.Increment( ref itemsTaken );
+								if ( itemsTakenLocal == totalItemCount )
+									cancelSource.Cancel();
+
+								Debug.WriteLine( "{0} ( - {1} by {2} )", _collection, item, consumerID );
+							}
+						}
+						catch ( OperationCanceledException )
+						{
+							//	This is expected
 						}
 					} );
 
@@ -106,7 +117,6 @@ namespace HellBrick.Collections.Test
 			}
 
 			await Task.WhenAll( producerTasks );
-			cancelSource.Cancel();
 
 			await Task.WhenAll( consumerTasks );
 			Assert.AreEqual( 0, _collection.Count );
