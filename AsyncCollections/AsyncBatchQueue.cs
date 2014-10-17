@@ -11,11 +11,12 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe collection that groups the items added to it into batches and allows consuming them asynchronously.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
-	public class AsyncBatchQueue<T>: IEnumerable<IReadOnlyList<T>>
+	public class AsyncBatchQueue<T>: IEnumerable<IReadOnlyList<T>>, IDisposable
 	{
 		private int _batchSize;
 		private volatile Batch _currentBatch;
 		private AsyncQueue<IReadOnlyList<T>> _batchQueue = new AsyncQueue<IReadOnlyList<T>>();
+		private Timer _flushTimer;
 
 		#region Construction
 
@@ -30,6 +31,18 @@ namespace HellBrick.Collections
 
 			_batchSize = batchSize;
 			_currentBatch = new Batch( this );
+		}
+
+		/// <summary>
+		/// Initializes a new instance of <see cref="AsyncBatchQueue"/> that produces batches when a specified amount of items is accumulated
+		/// or when a specified amount of time has passed.
+		/// </summary>
+		/// <param name="batchSize">Amount of the items contained in an output batch.</param>
+		/// <param name="flushPeriod">The time interval between the forced flushes of the pending items.</param>
+		public AsyncBatchQueue( int batchSize, TimeSpan flushPeriod )
+			: this( batchSize )
+		{
+			_flushTimer = new Timer( _ => Flush(), null, flushPeriod, flushPeriod );
 		}
 
 		#endregion
@@ -107,6 +120,16 @@ namespace HellBrick.Collections
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 		{
 			return this.GetEnumerator();
+		}
+
+		#endregion
+
+		#region IDisposable Members
+
+		public void Dispose()
+		{
+			if ( _flushTimer != null )
+				_flushTimer.Dispose();
 		}
 
 		#endregion
