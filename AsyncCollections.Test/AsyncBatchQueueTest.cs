@@ -52,5 +52,33 @@ namespace HellBrick.Collections.Test
 
 			CollectionAssert.AreEqual( array, batch.ToList() );
 		}
+
+		[TestMethod]
+		public async Task MultithreadingInsertsDontCrash()
+		{
+			int insertThreads = 4;
+			int itemsPerThread = 100;
+
+			_queue = new AsyncBatchQueue<int>( 11 );
+
+			List<Task> insertTasks = Enumerable.Range( 1, insertThreads )
+				.Select(
+					_ => Task.Run(
+						() =>
+						{
+							for ( int i = 0; i < itemsPerThread; i++ )
+								_queue.Add( 42 );
+						} ) )
+				.ToList();
+
+			await Task.WhenAll( insertTasks );
+			_queue.Flush();
+
+			int itemsTaken = 0;
+			while ( _queue.Count > 0 )
+				itemsTaken += ( await _queue.TakeAsync() ).Count;
+
+			Assert.AreEqual( insertThreads * itemsPerThread, itemsTaken );
+		}
 	}
 }
