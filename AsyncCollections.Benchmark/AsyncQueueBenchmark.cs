@@ -27,9 +27,14 @@ namespace HellBrick.AsyncCollections.Benchmark
 		public AsyncQueueBenchmark()
 		{
 			_competition = new BenchmarkCompetition();
+			AddTask( "HellBrick.AsyncCollections.AsyncQueue", () => new AsyncQueue<int>() );
+		}
+
+		private void AddTask( string name, Func<IAsyncCollection<int>> factoryMethod )
+		{
 			_competition.AddTask(
-				"HellBrick.AsyncCollections.AsyncQueue",
-				initialize : () => Initialize( () => new AsyncQueue<int>() ),
+				name,
+				initialize : () => Initialize( factoryMethod ),
 				clean : CleanUp,
 				action : () => DdosCurrentQueue() );
 		}
