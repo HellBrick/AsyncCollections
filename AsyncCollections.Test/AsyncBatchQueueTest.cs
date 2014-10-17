@@ -12,6 +12,13 @@ namespace HellBrick.Collections.Test
 	{
 		AsyncBatchQueue<int> _queue;
 
+		[TestCleanup]
+		public void CleanUp()
+		{
+			if ( _queue != null )
+				_queue.Dispose();
+		}
+
 		[TestMethod]
 		[ExpectedException( typeof( ArgumentOutOfRangeException ) )]
 		public void ThrowsOnIncorrectBatchSize()
@@ -51,6 +58,18 @@ namespace HellBrick.Collections.Test
 			var batch = await _queue.TakeAsync();
 
 			CollectionAssert.AreEqual( array, batch.ToList() );
+		}
+
+		[TestMethod]
+		public async Task TimerFlushesPendingItems()
+		{
+			TimeSpan flushPeriod = TimeSpan.FromMilliseconds( 500 );
+			_queue = new AsyncBatchQueue<int>( 9999, flushPeriod );
+			_queue.Add( 42 );
+
+			await Task.Delay( flushPeriod + flushPeriod );
+			var batch = await _queue.TakeAsync();
+			CollectionAssert.AreEqual( new[] { 42 }, batch.ToList() );
 		}
 
 		[TestMethod]
