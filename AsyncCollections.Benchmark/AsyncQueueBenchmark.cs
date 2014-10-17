@@ -28,6 +28,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 		{
 			_competition = new BenchmarkCompetition();
 			AddTask( "HellBrick.AsyncCollections.AsyncQueue", () => new AsyncQueue<int>() );
+			AddTask( "Nito.AsyncEx.AsyncCollection", () => new NitoAsyncCollectionAdapter<int>() );
 		}
 
 		private void AddTask( string name, Func<IAsyncCollection<int>> factoryMethod )
