@@ -45,7 +45,7 @@ namespace HellBrick.Collections
 		}
 
 		/// <summary>
-		/// Gets the number of flushed batches currently available for retrieving.
+		/// Gets the number of flushed batches currently available for consuming.
 		/// </summary>
 		public int Count
 		{
