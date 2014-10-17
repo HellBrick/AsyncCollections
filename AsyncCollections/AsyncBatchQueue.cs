@@ -22,6 +22,11 @@ namespace HellBrick.Collections
 			_currentBatch = new Batch( this );
 		}
 
+		public int Count
+		{
+			get { return _batchQueue.Count; }
+		}
+
 		public void Add( T item )
 		{
 			SpinWait spin = new SpinWait();
