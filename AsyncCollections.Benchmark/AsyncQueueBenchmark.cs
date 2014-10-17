@@ -30,7 +30,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 			_competition.AddTask(
 				"HellBrick.AsyncCollections.AsyncQueue",
 				initialize : () => Initialize( () => new AsyncQueue<int>() ),
-				clean : () => _currentQueue = null,
+				clean : CleanUp,
 				action : () => DdosCurrentQueue() );
 		}
 
@@ -39,6 +39,14 @@ namespace HellBrick.AsyncCollections.Benchmark
 			_currentQueue = factoryMethod();
 			_itemsTaken = 0;
 			_cancelSource = new CancellationTokenSource();
+		}
+
+		private void CleanUp()
+		{
+			_currentQueue = null;
+			_consumerTasks = null;
+			_producerTasks = null;
+			_cancelSource = null;
 		}
 
 		private void DdosCurrentQueue()
