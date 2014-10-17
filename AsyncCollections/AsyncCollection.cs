@@ -79,14 +79,6 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<TItem> TakeAsync()
-		{
-			return TakeAsync( CancellationToken.None );
-		}
-
-		/// <summary>
-		/// Removes and returns an item from the collection in an asynchronous manner.
-		/// </summary>
 		public Task<TItem> TakeAsync( CancellationToken cancellationToken )
 		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
