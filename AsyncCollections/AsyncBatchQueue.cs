@@ -11,7 +11,7 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe collection that groups the items added to it into batches and allows consuming them asynchronously.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
-	public class AsyncBatchQueue<T>
+	public class AsyncBatchQueue<T>: IEnumerable<IReadOnlyList<T>>
 	{
 		private int _batchSize;
 		private volatile Batch _currentBatch;
@@ -89,6 +89,24 @@ namespace HellBrick.Collections
 			SpinWait spin = new SpinWait();
 			while ( !_currentBatch.TryFlush() )
 				spin.SpinOnce();
+		}
+
+		#endregion
+
+		#region IEnumerable<IReadOnlyList<T>> Members
+
+		public IEnumerator<IReadOnlyList<T>> GetEnumerator()
+		{
+			return _batchQueue.GetEnumerator();
+		}
+
+		#endregion
+
+		#region IEnumerable Members
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+		{
+			return this.GetEnumerator();
 		}
 
 		#endregion
