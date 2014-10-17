@@ -7,12 +7,22 @@ using System.Threading.Tasks;
 
 namespace HellBrick.Collections
 {
+	/// <summary>
+	/// Represents a thread-safe collection that groups the items added to it into batches and allows consuming them asynchronously.
+	/// </summary>
+	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
 	public class AsyncBatchQueue<T>
 	{
 		private int _batchSize;
 		private volatile Batch _currentBatch;
 		private AsyncQueue<IReadOnlyList<T>> _batchQueue = new AsyncQueue<IReadOnlyList<T>>();
 
+		#region Construction
+
+		/// <summary>
+		/// Initializes a new instance of <see cref="AsyncBatchQueue"/> that produces batches of a specified size.
+		/// </summary>
+		/// <param name="batchSize">Amount of the items contained in an output batch.</param>
 		public AsyncBatchQueue( int batchSize )
 		{
 			if ( batchSize <= 0 )
@@ -22,11 +32,30 @@ namespace HellBrick.Collections
 			_currentBatch = new Batch( this );
 		}
 
+		#endregion
+
+		#region Public
+
+		/// <summary>
+		/// Gets amount of items contained in an output batch.
+		/// </summary>
+		public int BatchSize
+		{
+			get { return _batchSize; }
+		}
+
+		/// <summary>
+		/// Gets the number of flushed batches currently available for retrieving.
+		/// </summary>
 		public int Count
 		{
 			get { return _batchQueue.Count; }
 		}
 
+		/// <summary>
+		/// Adds an item to the collection. Flushes the new batch to be available for consuming if amount of the pending items has reached <see cref="BatchSize"/>.
+		/// </summary>
+		/// <param name="item"></param>
 		public void Add( T item )
 		{
 			SpinWait spin = new SpinWait();
@@ -35,22 +64,34 @@ namespace HellBrick.Collections
 				spin.SpinOnce();
 		}
 
+		/// <summary>
+		/// Removes and returns a batch from the collection in an asynchronous manner.
+		/// </summary>
 		public Task<IReadOnlyList<T>> TakeAsync()
 		{
 			return TakeAsync( CancellationToken.None );
 		}
 
+		/// <summary>
+		/// Removes and returns a batch from the collection in an asynchronous manner.
+		/// </summary>
 		public Task<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken )
 		{
 			return _batchQueue.TakeAsync( cancellationToken );
 		}
 
+		/// <summary>
+		/// <para>Forces a new batch to be created and made available for consuming even if amount of the pending items has not reached <see cref="BatchSize"/> yet.</para>
+		/// <para>Does nothing if there are no pending items to flush.</para>
+		/// </summary>
 		public void Flush()
 		{
 			SpinWait spin = new SpinWait();
 			while ( !_currentBatch.TryFlush() )
 				spin.SpinOnce();
 		}
+
+		#endregion
 
 		private class Batch: IReadOnlyList<T>
 		{
