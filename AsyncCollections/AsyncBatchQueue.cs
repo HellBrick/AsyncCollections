@@ -173,9 +173,9 @@ namespace HellBrick.Collections
 			{
 				int expectedPreviousReservation = Volatile.Read( ref _lastReservationIndex );
 
-				//	We don't flush if the batch doesn't have any items.
+				//	We don't flush if the batch doesn't have any items or if another thread is about to flush us.
 				//	However, we report success to avoid unnecessary spinning.
-				if ( expectedPreviousReservation < 0 )
+				if ( expectedPreviousReservation < 0 || expectedPreviousReservation >= _queue._batchSize )
 					return true;
 
 				int previousReservation = Interlocked.CompareExchange( ref _lastReservationIndex, _queue._batchSize, expectedPreviousReservation );
