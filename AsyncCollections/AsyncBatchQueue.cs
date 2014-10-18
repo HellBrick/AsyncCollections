@@ -161,7 +161,9 @@ namespace HellBrick.Collections
 				if ( index == _queue._batchSize - 1 )
 					FlushInternal( _queue._batchSize );
 
+				//	The full fence prevents setting finalization flag before the actual item value is written.
 				_items[ index ] = item;
+				Thread.MemoryBarrier();
 				_finalizationFlags[ index ] = true;
 
 				return true;
