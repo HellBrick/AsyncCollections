@@ -208,7 +208,12 @@ namespace HellBrick.Collections
 			{
 				SpinWait spin = new SpinWait();
 				while ( !_finalizationFlags[ index ] )
+				{
 					spin.SpinOnce();
+
+					//	The full fence prevents caching any part of _finalizationFlags[ index ] expression.
+					Thread.MemoryBarrier();
+				}
 
 				//	The full fence prevents reading item value before finalization flag is set.
 				Thread.MemoryBarrier();
