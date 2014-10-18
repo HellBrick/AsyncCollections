@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+	<metadata>
+		<id>AsyncCollections</id>
+		<version>1.0.0</version>
+		<title>AsyncCollections</title>
+		<authors>$author$</authors>
+		<projectUrl>https://github.com/HellBrick/AsyncCollections</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>$description$</description>
+		<releaseNotes>v1.0.0: Initial release.</releaseNotes>
+		<tags>async await AsyncCollection AsyncQueue</tags>
+	</metadata>
+	<files />
+</package>
