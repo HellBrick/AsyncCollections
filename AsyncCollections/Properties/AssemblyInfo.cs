@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle( "AsyncCollections" )]
-[assembly: AssemblyDescription( "This package contains a set of non-blocking threadsafe collections designed to be used asynchronously." )]
+[assembly: AssemblyDescription( "This package contains a set of non-blocking thread-safe collections designed to be used asynchronously." )]
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "HellBrick" )]
 [assembly: AssemblyProduct( "AsyncCollections" )]
