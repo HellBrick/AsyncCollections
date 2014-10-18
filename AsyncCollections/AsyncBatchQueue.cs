@@ -210,6 +210,8 @@ namespace HellBrick.Collections
 				while ( !_finalizationFlags[ index ] )
 					spin.SpinOnce();
 
+				//	The full fence prevents reading item value before finalization flag is set.
+				Thread.MemoryBarrier();
 				return _items[ index ];
 			}
 
