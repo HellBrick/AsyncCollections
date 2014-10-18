@@ -43,7 +43,7 @@ IReadOnlyList<int> batch = await queue.TakeAsync( cancelSource.Token );
 There's a constructor overload that allows you to specify a time period to wait before the pending items are flushed and a batch is made available for consuming, even if the batch size is not reached yet.
 
 ```C#
-AsyncBatchQueue<int> queue = new AsyncBatchQueue<int>( batchSize: 9999, flushPeriod: TimeSpan.FromSeconds( 5 ) );
+AsyncBatchQueue<int> queue = new AsyncBatchQueue<int>( 9999, TimeSpan.FromSeconds( 5 ) );
 queue.Add( 42 );
 
 //	this will asynchronously return a batch of 1 item after the specified flushPeriod has passed
