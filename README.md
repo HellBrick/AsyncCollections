@@ -46,6 +46,6 @@ There's a constructor overload that allows you to specify a time period to wait 
 AsyncBatchQueue<int> queue = new AsyncBatchQueue<int>( 9999, TimeSpan.FromSeconds( 5 ) );
 queue.Add( 42 );
 
-//	this will asynchronously return a batch of 1 item after the specified flushPeriod has passed
+//	this will asynchronously return a batch of 1 item in 5 seconds
 IReadOnlyList<int> batch = await queue.TakeAsync();
 ```
