@@ -169,7 +169,7 @@ namespace HellBrick.Collections
 
 			public bool TryFlush()
 			{
-				int expectedPreviousReservation = _lastReservationIndex;
+				int expectedPreviousReservation = Volatile.Read( ref _lastReservationIndex );
 
 				//	We don't flush if the batch doesn't have any items.
 				//	However, we report success to avoid unnecessary spinning.
