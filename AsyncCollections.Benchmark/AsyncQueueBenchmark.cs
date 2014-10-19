@@ -67,7 +67,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 				.ToArray();
 
 			Task.WaitAll( _producerTasks );
-			Task.WaitAny( _consumerTasks );
+			Task.WaitAll( _consumerTasks );
 		}
 
 		private async Task RunConsumerAsync()
