@@ -31,7 +31,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 
 		public Task<T> TakeAsync( System.Threading.CancellationToken cancellationToken )
 		{
-			T item = _collection.Take();
+			T item = _collection.Take( cancellationToken );
 			return Task.FromResult( item );
 		}
 
