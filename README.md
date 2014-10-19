@@ -1,9 +1,6 @@
 AsyncCollections
 ================
 
-Description
------------
-
 Have you ever dreamed about an asynchronous version of BlockingCollection<T> that returns thread to the thread pool instead of blocking? If the answer is 'yes', you'll definitely find this library interesting.
 
 Nuget package
