@@ -22,6 +22,10 @@ namespace HellBrick.Collections
 		//	_queueBalance > 0 means the opposite is true.
 		private long _queueBalance = 0;
 
+		/// <summary>
+		/// Initializes a new instance of <see cref="AsyncCollection"/> with a specified <see cref="IProducerConsumerCollection{T}"/> as an underlying item storage.
+		/// </summary>
+		/// <param name="itemQueue">The collection to use as an underlying item storage. MUST NOT be accessed elsewhere.</param>
 		protected AsyncCollection( IProducerConsumerCollection<T> itemQueue )
 		{
 			_itemQueue = itemQueue;
