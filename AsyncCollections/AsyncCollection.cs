@@ -25,6 +25,7 @@ namespace HellBrick.Collections
 		protected AsyncCollection( IProducerConsumerCollection<T> itemQueue )
 		{
 			_itemQueue = itemQueue;
+			_queueBalance = _itemQueue.Count;
 		}
 
 		#region IAsyncCollection<T> members
