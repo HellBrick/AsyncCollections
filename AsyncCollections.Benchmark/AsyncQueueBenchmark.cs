@@ -30,7 +30,8 @@ namespace HellBrick.AsyncCollections.Benchmark
 			AddTask( "HellBrick.AsyncCollections.AsyncQueue", () => new AsyncQueue<int>() );
 			AddTask( "Nito.AsyncEx.AsyncCollection", () => new NitoAsyncCollectionAdapter<int>() );
 			AddTask( "System.Concurrent.BlockingCollection", () => new BlockingCollectionAdapter<int>() );
-		}
+            AddTask("System.Threading.Tasks.Dataflow.BufferBlock", () => new TplDataflowAdapter<int>() );
+        }
 
 		private void AddTask( string name, Func<IAsyncCollection<int>> factoryMethod )
 		{
