@@ -119,6 +119,34 @@ namespace HellBrick.Collections
 			}
 		}
 
+		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections )
+		{
+			return TakeFromAnyAsync( collections, CancellationToken.None );
+		}
+
+		public async static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
+		{
+			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>( collections.Length );
+
+			for ( int i = 0; i < collections.Length; i++ )
+			{
+				Task<T> collectionTask = collections[ i ].TakeAsync( exclusiveSources.Sources[ i ] );
+
+				//	One of the collections already had an item and returned it directly
+				if ( collectionTask != null && collectionTask.IsCompleted )
+				{
+					exclusiveSources.MarkAsResolved();
+					return new AnyResult<T>( collectionTask.Result, i );
+				}
+			}
+
+			//	None of the collections had any items. The order doesn't matter anymore, it's time to start the competition.
+			exclusiveSources.UnlockCompetition( cancellationToken );
+			T result = await exclusiveSources.Task.ConfigureAwait( false );
+
+			return new AnyResult<T>( result, exclusiveSources.CompletedSourceIndex );
+		}
+
 		public override string ToString()
 		{
 			return String.Format( "Count = {0}, Awaiters = {1}", Count, AwaiterCount );
