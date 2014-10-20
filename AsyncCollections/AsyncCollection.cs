@@ -14,11 +14,15 @@ namespace HellBrick.Collections
 	/// </summary>
 	/// <typeparam name="TItem">The type of the items contained in the collection.</typeparam>
 	/// <typeparam name="TItemQueue">The type of the producer/consumer collection to use as an internal item storage.</typeparam>
-	public class AsyncCollection<TItem, TItemQueue>: IAsyncCollection<TItem>
-		where TItemQueue: IProducerConsumerCollection<TItem>, new()
+	public class AsyncCollection<TItem>: IAsyncCollection<TItem>
 	{
-		private TItemQueue _itemQueue = new TItemQueue();
+		private IProducerConsumerCollection<TItem> _itemQueue;
 		private ConcurrentQueue<TaskCompletionSource<TItem>> _awaiterQueue = new ConcurrentQueue<TaskCompletionSource<TItem>>();
+
+        protected AsyncCollection(IProducerConsumerCollection<TItem> itemQueue)
+        {
+            _itemQueue = itemQueue;
+        }
 
 		//	_queueBalance < 0 means there are free awaiters and not enough items.
 		//	_queueBalance > 0 means the opposite is true.
