@@ -45,6 +45,8 @@
     <Compile Include="AsyncQueue.cs" />
     <Compile Include="AsyncStack.cs" />
     <Compile Include="IAsyncCollection.cs" />
+    <Compile Include="Internal\CompletionSourceAwaiter.cs" />
+    <Compile Include="Internal\IAwaiter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

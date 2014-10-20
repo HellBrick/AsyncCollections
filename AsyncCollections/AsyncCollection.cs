@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using HellBrick.Collections.Internal;
 
 namespace HellBrick.Collections
 {
@@ -16,7 +17,7 @@ namespace HellBrick.Collections
 	public class AsyncCollection<T>: IAsyncCollection<T>
 	{
 		private IProducerConsumerCollection<T> _itemQueue;
-		private ConcurrentQueue<TaskCompletionSource<T>> _awaiterQueue = new ConcurrentQueue<TaskCompletionSource<T>>();
+		private ConcurrentQueue<IAwaiter<T>> _awaiterQueue = new ConcurrentQueue<IAwaiter<T>>();
 
 		//	_queueBalance < 0 means there are free awaiters and not enough items.
 		//	_queueBalance > 0 means the opposite is true.
@@ -74,7 +75,7 @@ namespace HellBrick.Collections
 			{
 				//	There's at least one awaiter available or being added as we're speaking, so we're giving the item to it.
 
-				TaskCompletionSource<T> awaiter;
+				IAwaiter<T> awaiter;
 
 				while ( !_awaiterQueue.TryDequeue( out awaiter ) )
 					spin.SpinOnce();
@@ -89,27 +90,20 @@ namespace HellBrick.Collections
 		/// </summary>
 		public Task<T> TakeAsync( CancellationToken cancellationToken )
 		{
+			CompletionSourceAwaiter<T> awaiter = new CompletionSourceAwaiter<T>( cancellationToken );
+			return TakeAsync( awaiter );
+		}
+
+		private Task<T> TakeAsync( IAwaiter<T> awaiter )
+		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
 
 			if ( balanceAfterCurrentAwaiter < 0 )
 			{
 				//	Awaiters are dominating, so we can safely add a new awaiter to the queue.
 
-				var taskSource = new TaskCompletionSource<T>();
-				_awaiterQueue.Enqueue( taskSource );
-
-				cancellationToken.Register(
-					state =>
-					{
-						//	It's enough to call TrySetCancelled() here.
-						//	The balance correction will be taken care of in the Add() method that will retreive the current awaiter from the queue.
-						TaskCompletionSource<T> awaiter = state as TaskCompletionSource<T>;
-						awaiter.TrySetCanceled();
-					},
-					taskSource,
-					useSynchronizationContext : false );
-
-				return taskSource.Task;
+				_awaiterQueue.Enqueue( awaiter );
+				return awaiter.Task;
 			}
 			else
 			{
