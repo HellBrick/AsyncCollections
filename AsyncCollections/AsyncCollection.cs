@@ -17,7 +17,7 @@ namespace HellBrick.Collections
 	public class AsyncCollection<TItem>: IAsyncCollection<TItem>
 	{
 		private IProducerConsumerCollection<TItem> _itemQueue;
-		private ConcurrentQueue<TaskCompletionSource<TItem>> _awaiterQueue = new ConcurrentQueue<TaskCompletionSource<TItem>>();
+        private ConcurrentQueue<ItemConsumer<TItem>> _awaiterQueue = new ConcurrentQueue<ItemConsumer<TItem>>();
 
         protected AsyncCollection(IProducerConsumerCollection<TItem> itemQueue)
         {
@@ -70,54 +70,38 @@ namespace HellBrick.Collections
 			{
 				//	There's at least one awaiter available or being added as we're speaking, so we're giving the item to it.
 
-				TaskCompletionSource<TItem> awaiter;
+                ItemConsumer<TItem> awaiter;
 
 				while ( !_awaiterQueue.TryDequeue( out awaiter ) )
 					spin.SpinOnce();
 
 				//	Returns false if the cancellation occurred earlier.
-				return awaiter.TrySetResult( item );
+                return awaiter(item);
 			}
 		}
 
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<TItem> TakeAsync( CancellationToken cancellationToken )
+        public void TakeAsync(ItemConsumer<TItem> consumer)
 		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
 
 			if ( balanceAfterCurrentAwaiter < 0 )
 			{
 				//	Awaiters are dominating, so we can safely add a new awaiter to the queue.
-
-				var taskSource = new TaskCompletionSource<TItem>();
-				_awaiterQueue.Enqueue( taskSource );
-
-				cancellationToken.Register(
-					state =>
-					{
-						//	It's enough to call TrySetCancelled() here.
-						//	The balance correction will be taken care of in the Add() method that will retreive the current awaiter from the queue.
-						TaskCompletionSource<TItem> awaiter = state as TaskCompletionSource<TItem>;
-						awaiter.TrySetCanceled();
-					},
-					taskSource,
-					useSynchronizationContext : false );
-
-				return taskSource.Task;
+                _awaiterQueue.Enqueue( consumer );
 			}
 			else
 			{
 				//	There's at least one item available or being added, so we're returning it directly.
-
 				TItem item;
 				SpinWait spin = new SpinWait();
-
 				while ( !_itemQueue.TryTake( out item ) )
 					spin.SpinOnce();
 
-				return Task.FromResult( item );
+                if (!consumer(item))
+                    throw new InvalidOperationException("In TakeAsync, item must be consumed");
 			}
 		}
 

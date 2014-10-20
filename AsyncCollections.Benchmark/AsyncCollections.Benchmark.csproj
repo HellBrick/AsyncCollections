@@ -59,11 +59,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncQueueBenchmark.cs" />
-    <Compile Include="BlockingCollectionAdapter.cs" />
-    <Compile Include="NitoAsyncCollectionAdapter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TplDataflowAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
