@@ -43,7 +43,7 @@ namespace HellBrick.Collections.Internal
 		public void UnlockCompetition( CancellationToken cancellationToken )
 		{
 			_completedSource = _unlocked;
-			
+
 			//	The full fence prevents cancellation callback registration (and therefore the cancellation) from being executed before the competition is unlocked.
 			Thread.MemoryBarrier();
 
