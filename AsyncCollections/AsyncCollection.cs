@@ -130,7 +130,8 @@ namespace HellBrick.Collections
 
 			for ( int i = 0; i < collections.Length; i++ )
 			{
-				Task<T> collectionTask = collections[ i ].TakeAsync( exclusiveSources.Sources[ i ] );
+				IAwaiter<T> awaiter = exclusiveSources.CreateAwaiter( i );
+				Task<T> collectionTask = collections[ i ].TakeAsync( awaiter );
 
 				//	One of the collections already had an item and returned it directly
 				if ( collectionTask != null && collectionTask.IsCompleted )
