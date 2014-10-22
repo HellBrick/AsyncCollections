@@ -119,11 +119,26 @@ namespace HellBrick.Collections
 			}
 		}
 
+		public override string ToString()
+		{
+			return String.Format( "Count = {0}, Awaiters = {1}", Count, AwaiterCount );
+		}
+
+		#endregion
+
+		#region Static
+
+		/// <summary>
+		/// Removes and returns an item from one of the specified collection in an asynchronous manner.
+		/// </summary>
 		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections )
 		{
 			return TakeFromAnyAsync( collections, CancellationToken.None );
 		}
 
+		/// <summary>
+		/// Removes and returns an item from one of the specified collection in an asynchronous manner.
+		/// </summary>
 		public async static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
 		{
 			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>();
@@ -146,11 +161,6 @@ namespace HellBrick.Collections
 			T result = await exclusiveSources.Task.ConfigureAwait( false );
 
 			return new AnyResult<T>( result, exclusiveSources.CompletedSourceIndex );
-		}
-
-		public override string ToString()
-		{
-			return String.Format( "Count = {0}, Awaiters = {1}", Count, AwaiterCount );
 		}
 
 		#endregion

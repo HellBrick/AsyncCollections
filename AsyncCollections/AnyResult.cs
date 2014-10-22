@@ -6,21 +6,31 @@ using System.Threading.Tasks;
 
 namespace HellBrick.Collections
 {
+	/// <summary>
+	/// Represents an item retrieved from one of the asynchronous collections.
+	/// </summary>
 	public struct AnyResult<T>
 	{
+		private T _result;
+		private int _collectionIndex;
+
 		public AnyResult( T result, int collectionIndex )
 		{
 			_result = result;
 			_collectionIndex = collectionIndex;
 		}
 
-		private T _result;
+		/// <summary>
+		/// Gets the item retrieved from a collection.
+		/// </summary>
 		public T Result
 		{
 			get { return _result; }
 		}
 
-		private int _collectionIndex;
+		/// <summary>
+		/// Gets the index of the collection the item was retrieved from.
+		/// </summary>
 		public int CollectionIndex
 		{
 			get { return _collectionIndex; }
