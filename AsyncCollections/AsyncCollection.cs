@@ -126,7 +126,7 @@ namespace HellBrick.Collections
 
 		public async static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
 		{
-			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>( collections.Length );
+			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>();
 
 			for ( int i = 0; i < collections.Length; i++ )
 			{

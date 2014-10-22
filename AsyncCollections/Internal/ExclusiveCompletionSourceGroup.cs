@@ -15,12 +15,6 @@ namespace HellBrick.Collections.Internal
 
 		private int _completedSource = _locked;
 		private TaskCompletionSource<T> _realCompetionSource = new TaskCompletionSource<T>();
-		private ExclusiveCompletionSource[] _sources;
-
-		public ExclusiveCompletionSourceGroup( int count )
-		{
-			_sources = new ExclusiveCompletionSource[ count ];
-		}
 
 		public int CompletedSourceIndex
 		{
@@ -34,9 +28,7 @@ namespace HellBrick.Collections.Internal
 
 		public IAwaiter<T> CreateAwaiter( int index )
 		{
-			ExclusiveCompletionSource awaiter = new ExclusiveCompletionSource( this, index );
-			_sources[ index ] = awaiter;
-			return awaiter;
+			return new ExclusiveCompletionSource( this, index );
 		}
 
 		public void MarkAsResolved()
