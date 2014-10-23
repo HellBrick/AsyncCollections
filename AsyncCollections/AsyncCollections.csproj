@@ -42,6 +42,9 @@
   <ItemGroup>
     <Compile Include="AsyncBatchQueue.cs" />
     <Compile Include="AsyncCollection.cs" />
+    <Compile Include="AsyncPriorityQueue.cs" />
+    <Compile Include="ConcurrentPriorityQueue.cs" />
+    <Compile Include="PriorityQueue.cs" />
     <Compile Include="AsyncQueue.cs" />
     <Compile Include="AsyncStack.cs" />
     <Compile Include="IAsyncCollection.cs" />

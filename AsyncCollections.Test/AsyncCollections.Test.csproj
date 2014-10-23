@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="AsyncBatchQueueTest.cs" />
     <Compile Include="AsyncCollectionTest.cs" />
+    <Compile Include="PriorityQueueTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
