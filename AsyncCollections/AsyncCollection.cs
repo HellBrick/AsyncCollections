@@ -143,6 +143,19 @@ namespace HellBrick.Collections
 		{
 			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>();
 
+			//	Fast route: we attempt to take from the top-priority queues that have any items.
+			//	If the fast route succeeds, we avoid allocating and queueing a bunch of awaiters.
+			for ( int i = 0; i < collections.Length; i++ )
+			{
+				if ( collections[ i ].Count > 0 )
+				{
+					AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
+					if ( result.HasValue )
+						return result.Value;
+				}
+			}
+
+			//	No luck during the fast route; just queue the rest of awaiters.
 			for ( int i = 0; i < collections.Length; i++ )
 			{
 				AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
