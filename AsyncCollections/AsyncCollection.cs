@@ -145,22 +145,36 @@ namespace HellBrick.Collections
 
 			for ( int i = 0; i < collections.Length; i++ )
 			{
-				IAwaiter<T> awaiter = exclusiveSources.CreateAwaiter( i );
-				Task<T> collectionTask = collections[ i ].TakeAsync( awaiter );
-
-				//	One of the collections already had an item and returned it directly
-				if ( collectionTask != null && collectionTask.IsCompleted )
-				{
-					exclusiveSources.MarkAsResolved();
-					return new AnyResult<T>( collectionTask.Result, i );
-				}
+				AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
+				if ( result.HasValue )
+					return result.Value;
 			}
 
 			//	None of the collections had any items. The order doesn't matter anymore, it's time to start the competition.
 			exclusiveSources.UnlockCompetition( cancellationToken );
-			T result = await exclusiveSources.Task.ConfigureAwait( false );
+			T resultValue = await exclusiveSources.Task.ConfigureAwait( false );
 
-			return new AnyResult<T>( result, exclusiveSources.CompletedSourceIndex );
+			return new AnyResult<T>( resultValue, exclusiveSources.CompletedSourceIndex );
+		}
+
+		private static AnyResult<T>? TryTakeFast( ExclusiveCompletionSourceGroup<T> exclusiveSources, AsyncCollection<T> collection, int index )
+		{
+			IAwaiter<T> awaiter = exclusiveSources.TryCreateAwaiter( index );
+
+			//	This can happen if the awaiter has already been created during the fast route.
+			if ( awaiter == null )
+				return null;
+
+			Task<T> collectionTask = collection.TakeAsync( awaiter );
+
+			//	One of the collections already had an item and returned it directly
+			if ( collectionTask != null && collectionTask.IsCompleted )
+			{
+				exclusiveSources.MarkAsResolved();
+				return new AnyResult<T>( collectionTask.Result, index );
+			}
+			else
+				return null;
 		}
 
 		#endregion

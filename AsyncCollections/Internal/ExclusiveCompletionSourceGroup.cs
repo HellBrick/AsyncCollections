@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,6 +12,7 @@ namespace HellBrick.Collections.Internal
 	{
 		private int _completedSource = State.Locked;
 		private TaskCompletionSource<T> _realCompetionSource = new TaskCompletionSource<T>();
+		private BitVector32 _awaitersCreated = new BitVector32();
 
 		public int CompletedSourceIndex
 		{
@@ -22,8 +24,13 @@ namespace HellBrick.Collections.Internal
 			get { return _realCompetionSource.Task; }
 		}
 
-		public IAwaiter<T> CreateAwaiter( int index )
+		public IAwaiter<T> TryCreateAwaiter( int index )
 		{
+			int mask = BitVector32.CreateMask( index );
+			if ( _awaitersCreated[ mask ] )
+				return null;
+
+			_awaitersCreated[ mask ] = true;
 			return new ExclusiveCompletionSource( this, index );
 		}
 
