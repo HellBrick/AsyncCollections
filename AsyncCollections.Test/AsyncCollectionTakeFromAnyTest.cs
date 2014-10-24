@@ -32,6 +32,15 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
+		public async Task NoUnnecessaryAwaitersAreQueued()
+		{
+			_collections[ 1 ].Add( 42 );
+
+			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
+			Assert.AreEqual( 0, _collections[ 0 ].AwaiterCount );
+		}
+
+		[TestMethod]
 		public async Task RespectsCollectionOrder()
 		{
 			_collections[ 0 ].Add( 42 );
