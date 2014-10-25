@@ -11,23 +11,23 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace HellBrick.Collections.Test
 {
 	[TestClass]
-	public abstract class AsyncCollectionTest
+	public abstract class AsyncCollectionTest<TAsyncCollection> where TAsyncCollection: IAsyncCollection<int>
 	{
-		private IAsyncCollection<int> _collection;
+		protected TAsyncCollection Collection { get; private set; }
 
 		[TestInitialize]
 		public void Initialize()
 		{
-			_collection = CreateCollection();
+			Collection = CreateCollection();
 		}
 
-		protected abstract IAsyncCollection<int> CreateCollection();
+		protected abstract TAsyncCollection CreateCollection();
 
 		[TestMethod]
 		public void TakingItemFromNonEmptyCollectionCompletesImmediately()
 		{
-			_collection.Add( 42 );
-			var itemTask = _collection.TakeAsync( CancellationToken.None );
+			Collection.Add( 42 );
+			var itemTask = Collection.TakeAsync( CancellationToken.None );
 			Assert.IsTrue( itemTask.IsCompleted );
 			Assert.AreEqual( 42, itemTask.Result );
 		}
@@ -35,10 +35,10 @@ namespace HellBrick.Collections.Test
 		[TestMethod]
 		public void AddingItemCompletesPendingTask()
 		{
-			var itemTask = _collection.TakeAsync( CancellationToken.None );
+			var itemTask = Collection.TakeAsync( CancellationToken.None );
 			Assert.IsFalse( itemTask.IsCompleted );
 
-			_collection.Add( 42 );
+			Collection.Add( 42 );
 			Assert.IsTrue( itemTask.IsCompleted );
 			Assert.AreEqual( 42, itemTask.Result );
 		}
@@ -47,13 +47,13 @@ namespace HellBrick.Collections.Test
 		public void CancelledTakeCancelsTask()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
-			var itemTask = _collection.TakeAsync( cancelSource.Token );
+			var itemTask = Collection.TakeAsync( cancelSource.Token );
 			cancelSource.Cancel();
 			Assert.IsTrue( itemTask.IsCanceled );
 
-			_collection.Add( 42 );
-			Assert.AreEqual( 1, _collection.Count );
-			Assert.AreEqual( 0, _collection.AwaiterCount );
+			Collection.Add( 42 );
+			Assert.AreEqual( 1, Collection.Count );
+			Assert.AreEqual( 0, Collection.AwaiterCount );
 		}
 
 		[TestMethod]
@@ -67,7 +67,7 @@ namespace HellBrick.Collections.Test
 			int consumerThreads = 2;
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
 
-			List<Task> consumerTasks = new List<Task>();			
+			List<Task> consumerTasks = new List<Task>();
 
 			for ( int i = 0; i < consumerThreads; i++ )
 			{
@@ -79,12 +79,12 @@ namespace HellBrick.Collections.Test
 						{
 							while ( itemsTaken < totalItemCount )
 							{
-								int item = await _collection.TakeAsync( cancelSource.Token );
+								int item = await Collection.TakeAsync( cancelSource.Token );
 								int itemsTakenLocal = Interlocked.Increment( ref itemsTaken );
 								if ( itemsTakenLocal == totalItemCount )
 									cancelSource.Cancel();
 
-								Debug.WriteLine( "{0} ( - {1} by {2} )", _collection, item, consumerID );
+								Debug.WriteLine( "{0} ( - {1} by {2} )", Collection, item, consumerID );
 							}
 						}
 						catch ( OperationCanceledException )
@@ -108,8 +108,8 @@ namespace HellBrick.Collections.Test
 						for ( int j = 0; j < itemCount; j++ )
 						{
 							int item = producerID * itemCount + j;	//	some kind of a unique item ID
-							_collection.Add( item );
-							Debug.WriteLine( _collection );
+							Collection.Add( item );
+							Debug.WriteLine( Collection );
 						}
 					} );
 
@@ -119,23 +119,23 @@ namespace HellBrick.Collections.Test
 			await Task.WhenAll( producerTasks );
 
 			await Task.WhenAll( consumerTasks );
-			Assert.AreEqual( 0, _collection.Count );
+			Assert.AreEqual( 0, Collection.Count );
 		}
 	}
 
 	[TestClass]
-	public class AsyncQueueTest: AsyncCollectionTest
+	public class AsyncQueueTest: AsyncCollectionTest<AsyncQueue<int>>
 	{
-		protected override IAsyncCollection<int> CreateCollection()
+		protected override AsyncQueue<int> CreateCollection()
 		{
 			return new AsyncQueue<int>();
 		}
 	}
 
 	[TestClass]
-	public class AsyncStackTest: AsyncCollectionTest
+	public class AsyncStackTest: AsyncCollectionTest<AsyncStack<int>>
 	{
-		protected override IAsyncCollection<int> CreateCollection()
+		protected override AsyncStack<int> CreateCollection()
 		{
 			return new AsyncStack<int>();
 		}
