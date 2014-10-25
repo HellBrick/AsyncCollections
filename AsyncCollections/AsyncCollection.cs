@@ -139,7 +139,7 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from one of the specified collection in an asynchronous manner.
 		/// </summary>
-		public async static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
+		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
 		{
 			if ( collections == null )
 				throw new ArgumentNullException( "collections" );
@@ -157,7 +157,7 @@ namespace HellBrick.Collections
 				{
 					AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
 					if ( result.HasValue )
-						return result.Value;
+						return Task.FromResult( result.Value );
 				}
 			}
 
@@ -166,14 +166,12 @@ namespace HellBrick.Collections
 			{
 				AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
 				if ( result.HasValue )
-					return result.Value;
+					return Task.FromResult( result.Value );
 			}
 
 			//	None of the collections had any items. The order doesn't matter anymore, it's time to start the competition.
 			exclusiveSources.UnlockCompetition( cancellationToken );
-			AnyResult<T> awaitedResult = await exclusiveSources.Task.ConfigureAwait( false );
-
-			return awaitedResult;
+			return exclusiveSources.Task;
 		}
 
 		private static AnyResult<T>? TryTakeFast( ExclusiveCompletionSourceGroup<T> exclusiveSources, AsyncCollection<T> collection, int index )
