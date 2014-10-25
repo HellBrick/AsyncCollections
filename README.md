@@ -41,6 +41,27 @@ int index = result.CollectionIndex;
 int value = result.Value;
 ```
 
+``AsyncBoundedPriorityQueue<T>``
+-------------------------------
+
+This class represents a priority queue with a limited number of priority levels.
+
+```C#
+var queue = new AsyncBoundedPriorityQueue<int>( priorityLevels: 3 );
+
+queue.Add( 1000 ); //  item is added at the lowest priority by default
+queue.AddTopPriority( 42 );
+queue.AddLowPriority( 999 );
+queue.Add( 16, priority: 1 );
+
+//  42 16 1000 999
+while ( true )
+{
+  Debug.Write( await queue.TakeAsync() );
+  Debug.Write( " " );
+}
+```
+
 ``AsyncBatchQueue<T>``
 ------------------
 
