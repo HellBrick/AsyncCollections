@@ -40,6 +40,25 @@ namespace HellBrick.Collections
 
 		#endregion
 
+		#region Priority-specific
+
+		public int PriorityLevels
+		{
+			get { return _priorityQueues.Length; }
+		}
+
+		public void AddTopPriority( T item )
+		{
+			Add( item, 0 );
+		}
+
+		public void AddLowPriority( T item )
+		{
+			Add( item, _priorityQueues.Length - 1 );
+		}
+
+		#endregion
+
 		#region IAsyncCollection<T> Members
 
 		public int AwaiterCount
