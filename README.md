@@ -21,6 +21,26 @@ CancellationTokenSource cancelSource = new CancellationTokenSource();
 int item = await queue.TakeAsync( cancelSource.Token );
 ```
 
+``AsyncCollection<T>``
+-------------------------------
+
+``AsyncCollection<T>`` is the base class for ``AsyncQueue<T>`` and ``AsyncStack<T>`` that also provides functions similar to ones of the ``BlockingCollection<T>``. For instance:
+
+```C#
+AsyncQueue<int> queue1 = new AsyncQueue<int>();
+AsyncQueue<int> queue2 = new AsyncQueue<int>();
+AsyncQueue<int>[] _collections = new [] { queue1, queue2 };
+
+//	will return asynchronously when one of the queues gets an item
+AnyResult<int> result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
+
+//  index of the collection that returned the item
+int index = result.CollectionIndex;
+
+//  the actual item that has been returned
+int value = result.Value;
+```
+
 ``AsyncBatchQueue<T>``
 ------------------
 
