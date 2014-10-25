@@ -40,16 +40,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnyResult.cs" />
     <Compile Include="AsyncBatchQueue.cs" />
     <Compile Include="AsyncCollection.cs" />
     <Compile Include="AsyncQueue.cs" />
     <Compile Include="AsyncStack.cs" />
     <Compile Include="IAsyncCollection.cs" />
+    <Compile Include="Internal\CancelledTask.cs" />
+    <Compile Include="Internal\CompletionSourceAwaiter.cs" />
+    <Compile Include="Internal\ExclusiveCompletionSourceGroup.cs" />
+    <Compile Include="Internal\IAwaiter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\AsyncCollections.nuspec" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

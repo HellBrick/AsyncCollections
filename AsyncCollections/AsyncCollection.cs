@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using HellBrick.Collections.Internal;
 
 namespace HellBrick.Collections
 {
@@ -16,7 +17,7 @@ namespace HellBrick.Collections
 	public class AsyncCollection<T>: IAsyncCollection<T>
 	{
 		private IProducerConsumerCollection<T> _itemQueue;
-		private ConcurrentQueue<TaskCompletionSource<T>> _awaiterQueue = new ConcurrentQueue<TaskCompletionSource<T>>();
+		private ConcurrentQueue<IAwaiter<T>> _awaiterQueue = new ConcurrentQueue<IAwaiter<T>>();
 
 		//	_queueBalance < 0 means there are free awaiters and not enough items.
 		//	_queueBalance > 0 means the opposite is true.
@@ -74,7 +75,7 @@ namespace HellBrick.Collections
 			{
 				//	There's at least one awaiter available or being added as we're speaking, so we're giving the item to it.
 
-				TaskCompletionSource<T> awaiter;
+				IAwaiter<T> awaiter;
 
 				while ( !_awaiterQueue.TryDequeue( out awaiter ) )
 					spin.SpinOnce();
@@ -89,27 +90,20 @@ namespace HellBrick.Collections
 		/// </summary>
 		public Task<T> TakeAsync( CancellationToken cancellationToken )
 		{
+			CompletionSourceAwaiter<T> awaiter = new CompletionSourceAwaiter<T>( cancellationToken );
+			return TakeAsync( awaiter );
+		}
+
+		private Task<T> TakeAsync( IAwaiter<T> awaiter )
+		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
 
 			if ( balanceAfterCurrentAwaiter < 0 )
 			{
 				//	Awaiters are dominating, so we can safely add a new awaiter to the queue.
 
-				var taskSource = new TaskCompletionSource<T>();
-				_awaiterQueue.Enqueue( taskSource );
-
-				cancellationToken.Register(
-					state =>
-					{
-						//	It's enough to call TrySetCancelled() here.
-						//	The balance correction will be taken care of in the Add() method that will retreive the current awaiter from the queue.
-						TaskCompletionSource<T> awaiter = state as TaskCompletionSource<T>;
-						awaiter.TrySetCanceled();
-					},
-					taskSource,
-					useSynchronizationContext : false );
-
-				return taskSource.Task;
+				_awaiterQueue.Enqueue( awaiter );
+				return awaiter.Task;
 			}
 			else
 			{
@@ -128,6 +122,79 @@ namespace HellBrick.Collections
 		public override string ToString()
 		{
 			return String.Format( "Count = {0}, Awaiters = {1}", Count, AwaiterCount );
+		}
+
+		#endregion
+
+		#region Static
+
+		/// <summary>
+		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
+		/// </summary>
+		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections )
+		{
+			return TakeFromAnyAsync( collections, CancellationToken.None );
+		}
+
+		/// <summary>
+		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
+		/// </summary>
+		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
+		{
+			if ( collections == null )
+				throw new ArgumentNullException( "collections" );
+
+			if ( collections.Length <= 0 || collections.Length > 32 )
+				throw new ArgumentException( "The collection array can't contain less than 1 or more than 32 collections.", "collections" );
+
+			if ( cancellationToken.IsCancellationRequested )
+				return CanceledTask<AnyResult<T>>.Value;
+
+			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>();
+
+			//	Fast route: we attempt to take from the top-priority queues that have any items.
+			//	If the fast route succeeds, we avoid allocating and queueing a bunch of awaiters.
+			for ( int i = 0; i < collections.Length; i++ )
+			{
+				if ( collections[ i ].Count > 0 )
+				{
+					AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
+					if ( result.HasValue )
+						return Task.FromResult( result.Value );
+				}
+			}
+
+			//	No luck during the fast route; just queue the rest of awaiters.
+			for ( int i = 0; i < collections.Length; i++ )
+			{
+				AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
+				if ( result.HasValue )
+					return Task.FromResult( result.Value );
+			}
+
+			//	None of the collections had any items. The order doesn't matter anymore, it's time to start the competition.
+			exclusiveSources.UnlockCompetition( cancellationToken );
+			return exclusiveSources.Task;
+		}
+
+		private static AnyResult<T>? TryTakeFast( ExclusiveCompletionSourceGroup<T> exclusiveSources, AsyncCollection<T> collection, int index )
+		{
+			IAwaiter<T> awaiter = exclusiveSources.TryCreateAwaiter( index );
+
+			//	This can happen if the awaiter has already been created during the fast route.
+			if ( awaiter == null )
+				return null;
+
+			Task<T> collectionTask = collection.TakeAsync( awaiter );
+
+			//	One of the collections already had an item and returned it directly
+			if ( collectionTask != null && collectionTask.IsCompleted )
+			{
+				exclusiveSources.MarkAsResolved();
+				return new AnyResult<T>( collectionTask.Result, index );
+			}
+			else
+				return null;
 		}
 
 		#endregion

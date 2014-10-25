@@ -52,6 +52,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AsyncBatchQueueTest.cs" />
+    <Compile Include="AsyncCollectionTakeFromAnyTest.cs" />
     <Compile Include="AsyncCollectionTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
