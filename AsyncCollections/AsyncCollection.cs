@@ -141,6 +141,12 @@ namespace HellBrick.Collections
 		/// </summary>
 		public async static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
 		{
+			if ( collections == null )
+				throw new ArgumentNullException( "collections" );
+
+			if ( collections.Length <= 0 || collections.Length > 32 )
+				throw new ArgumentException( "The collection array can't contain less than 1 or more than 32 collections.", "collections" );
+
 			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>();
 
 			//	Fast route: we attempt to take from the top-priority queues that have any items.
