@@ -147,6 +147,9 @@ namespace HellBrick.Collections
 			if ( collections.Length <= 0 || collections.Length > 32 )
 				throw new ArgumentException( "The collection array can't contain less than 1 or more than 32 collections.", "collections" );
 
+			if ( cancellationToken.IsCancellationRequested )
+				return CanceledTask<AnyResult<T>>.Value;
+
 			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>();
 
 			//	Fast route: we attempt to take from the top-priority queues that have any items.

@@ -77,5 +77,18 @@ namespace HellBrick.Collections.Test
 			Assert.AreEqual( 1, _collections[ 0 ].Count );
 			Assert.AreEqual( 1, _collections[ 1 ].Count );
 		}
+
+		[TestMethod]
+		public void DoesNothingIfTokenIsCanceledBeforeMethodCall()
+		{
+			CancellationTokenSource cancelSource = new CancellationTokenSource();
+			cancelSource.Cancel();
+			_collections[ 0 ].Add( 42 );
+
+			var task = AsyncCollection<int>.TakeFromAnyAsync( _collections, cancelSource.Token );
+
+			Assert.IsTrue( task.IsCanceled );
+			Assert.AreEqual( 1, _collections[ 0 ].Count );
+		}
 	}
 }
