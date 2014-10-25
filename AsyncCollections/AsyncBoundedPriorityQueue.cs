@@ -20,8 +20,13 @@ namespace HellBrick.Collections
 
 		public AsyncBoundedPriorityQueue( int priorityLevels, Func<T, int> priorityExtractor )
 		{
-			if ( priorityLevels < 0 || priorityLevels > 32 )
-				throw new ArgumentOutOfRangeException( "priorityLevels", priorityLevels, "Amount of priority levels can't be less than 0 or bigger than 32" );
+			if ( priorityLevels < 0 || priorityLevels > AsyncCollection<T>.TakeFromAnyMaxCollections )
+			{
+				throw new ArgumentOutOfRangeException(
+					"priorityLevels",
+					priorityLevels,
+					String.Format( "Amount of priority levels can't be less than 0 or bigger than {0}", AsyncCollection<T>.TakeFromAnyMaxCollections ) );
+			}
 
 			_priorityExtractor = priorityExtractor;
 

@@ -128,6 +128,8 @@ namespace HellBrick.Collections
 
 		#region Static
 
+		internal const int TakeFromAnyMaxCollections = 32;
+
 		/// <summary>
 		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
 		/// </summary>
@@ -144,8 +146,8 @@ namespace HellBrick.Collections
 			if ( collections == null )
 				throw new ArgumentNullException( "collections" );
 
-			if ( collections.Length <= 0 || collections.Length > 32 )
-				throw new ArgumentException( "The collection array can't contain less than 1 or more than 32 collections.", "collections" );
+			if ( collections.Length <= 0 || collections.Length > TakeFromAnyMaxCollections )
+				throw new ArgumentException( String.Format( "The collection array can't contain less than 1 or more than {0} collections.", TakeFromAnyMaxCollections ), "collections" );
 
 			if ( cancellationToken.IsCancellationRequested )
 				return CanceledTask<AnyResult<T>>.Value;
