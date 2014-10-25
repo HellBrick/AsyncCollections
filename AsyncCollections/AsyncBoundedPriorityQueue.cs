@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace HellBrick.Collections
 {
+	/// <summary>
+	/// Represents a thread-safe queue with a bounded number of priority levels.
+	/// </summary>
+	/// <typeparam name="T">The type of the items contained in the queue.</typeparam>
 	public class AsyncBoundedPriorityQueue<T>: IAsyncCollection<T>
 	{
 		private readonly Func<T, int> _priorityResolver;
@@ -16,11 +20,23 @@ namespace HellBrick.Collections
 
 		#region Construction
 
+		/// <summary>
+		/// <para>Initializes a new <see cref="AsyncBoundedPriorityQueue{T}"/> instance with a specified number of priority levels.</para>
+		/// <para>The items will be inserted at the lowest priority by default.</para>
+		/// </summary>
+		/// <param name="priorityLevels">An amount of priority levels to support.</param>
 		public AsyncBoundedPriorityQueue( int priorityLevels )
 			: this( priorityLevels, _ => priorityLevels - 1 )
 		{
 		}
 
+		/// <summary>
+		/// Initializes a new <see cref="AsyncBoundedPriorityQueue{T}"/> instance with a specified number of priority levels and a specified priority resolver.
+		/// </summary>
+		/// <param name="priorityLevels">An amount of priority levels to support.</param>
+		/// <param name="priorityResolver">The delegate to use to determine the default item priority.
+		/// Must return an integer between 0 (top priority) and <paramref name="priorityLevels"/> - 1 (low priority).
+		/// </param>
 		public AsyncBoundedPriorityQueue( int priorityLevels, Func<T, int> priorityResolver )
 		{
 			if ( priorityLevels < 0 || priorityLevels > AsyncCollection<T>.TakeFromAnyMaxCollections )
@@ -42,21 +58,37 @@ namespace HellBrick.Collections
 
 		#region Priority-specific
 
+		/// <summary>
+		/// Gets the amount of priority levels the collection supports.
+		/// </summary>
 		public int PriorityLevels
 		{
 			get { return _priorityQueues.Length; }
 		}
 
+		/// <summary>
+		/// Adds an item to the collection at the highest priority.
+		/// </summary>
+		/// <param name="item">The item to add to the collection.</param>
 		public void AddTopPriority( T item )
 		{
 			Add( item, 0 );
 		}
 
+		/// <summary>
+		/// Adds an item to the collection at the lowest priority.
+		/// </summary>
+		/// <param name="item">The item to add to the collection.</param>
 		public void AddLowPriority( T item )
 		{
 			Add( item, _priorityQueues.Length - 1 );
 		}
 
+		/// <summary>
+		/// Adds an item to the collection at a specified priority.
+		/// </summary>
+		/// <param name="item">The item to add to the collection.</param>
+		/// <param name="priority">The priority of the item, with 0 being the top priority.</param>
 		public void Add( T item, int priority )
 		{
 			if ( priority < 0 || priority > _priorityQueues.Length )
@@ -74,16 +106,26 @@ namespace HellBrick.Collections
 
 		#region IAsyncCollection<T> Members
 
+		/// <summary>
+		/// Gets an amount of pending item requests.
+		/// </summary>
 		public int AwaiterCount
 		{
 			get { return Volatile.Read( ref _awaiterCount ); }
 		}
 
+		/// <summary>
+		/// Adds an item to the collection at default priority.
+		/// </summary>
+		/// <param name="item">The item to add to the collection.</param>
 		public void Add( T item )
 		{
 			Add( item, _priorityResolver( item ) );
 		}
 
+		/// <summary>
+		/// Removes and returns an item with the highest priority from the collection in an asynchronous manner.
+		/// </summary>
 		public async Task<T> TakeAsync( System.Threading.CancellationToken cancellationToken )
 		{
 			Interlocked.Increment( ref _awaiterCount );
