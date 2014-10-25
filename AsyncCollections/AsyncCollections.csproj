@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="AnyResult.cs" />
     <Compile Include="AsyncBatchQueue.cs" />
+    <Compile Include="AsyncBoundedPriorityQueue.cs" />
     <Compile Include="AsyncCollection.cs" />
     <Compile Include="AsyncQueue.cs" />
     <Compile Include="AsyncStack.cs" />
