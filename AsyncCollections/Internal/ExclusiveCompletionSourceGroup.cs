@@ -11,15 +11,10 @@ namespace HellBrick.Collections.Internal
 	class ExclusiveCompletionSourceGroup<T>
 	{
 		private int _completedSource = State.Locked;
-		private TaskCompletionSource<T> _realCompetionSource = new TaskCompletionSource<T>();
+		private TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
 		private BitVector32 _awaitersCreated = new BitVector32();
 
-		public int CompletedSourceIndex
-		{
-			get { return _completedSource; }
-		}
-
-		public Task<T> Task
+		public Task<AnyResult<T>> Task
 		{
 			get { return _realCompetionSource.Task; }
 		}
@@ -87,7 +82,7 @@ namespace HellBrick.Collections.Internal
 					if ( completedSource == State.Unlocked )
 					{
 						//	We are the champions!
-						_group._realCompetionSource.SetResult( result );
+						_group._realCompetionSource.SetResult( new AnyResult<T>( result, _id ) );
 						return true;
 					}
 

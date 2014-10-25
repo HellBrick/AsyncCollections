@@ -165,9 +165,9 @@ namespace HellBrick.Collections
 
 			//	None of the collections had any items. The order doesn't matter anymore, it's time to start the competition.
 			exclusiveSources.UnlockCompetition( cancellationToken );
-			T resultValue = await exclusiveSources.Task.ConfigureAwait( false );
+			AnyResult<T> awaitedResult = await exclusiveSources.Task.ConfigureAwait( false );
 
-			return new AnyResult<T>( resultValue, exclusiveSources.CompletedSourceIndex );
+			return awaitedResult;
 		}
 
 		private static AnyResult<T>? TryTakeFast( ExclusiveCompletionSourceGroup<T> exclusiveSources, AsyncCollection<T> collection, int index )
