@@ -9,7 +9,7 @@ namespace HellBrick.Collections
 {
 	public class AsyncBoundedPriorityQueue<T>: IAsyncCollection<T>
 	{
-		private readonly Func<T, int> _priorityExtractor;
+		private readonly Func<T, int> _priorityResolver;
 		private readonly AsyncQueue<T>[] _priorityQueues;
 
 		private int _awaiterCount = 0;
@@ -21,7 +21,7 @@ namespace HellBrick.Collections
 		{
 		}
 
-		public AsyncBoundedPriorityQueue( int priorityLevels, Func<T, int> priorityExtractor )
+		public AsyncBoundedPriorityQueue( int priorityLevels, Func<T, int> priorityResolver )
 		{
 			if ( priorityLevels < 0 || priorityLevels > AsyncCollection<T>.TakeFromAnyMaxCollections )
 			{
@@ -31,7 +31,7 @@ namespace HellBrick.Collections
 					String.Format( "Amount of priority levels can't be less than 0 or bigger than {0}", AsyncCollection<T>.TakeFromAnyMaxCollections ) );
 			}
 
-			_priorityExtractor = priorityExtractor;
+			_priorityResolver = priorityResolver;
 
 			_priorityQueues = new AsyncQueue<T>[ priorityLevels ];
 			for ( int i = 0; i < priorityLevels; i++ )
@@ -57,20 +57,6 @@ namespace HellBrick.Collections
 			Add( item, _priorityQueues.Length - 1 );
 		}
 
-		#endregion
-
-		#region IAsyncCollection<T> Members
-
-		public int AwaiterCount
-		{
-			get { return Volatile.Read( ref _awaiterCount ); }
-		}
-
-		public void Add( T item )
-		{
-			Add( item, _priorityExtractor( item ) );
-		}
-
 		public void Add( T item, int priority )
 		{
 			if ( priority < 0 || priority > _priorityQueues.Length )
@@ -82,6 +68,20 @@ namespace HellBrick.Collections
 			}
 
 			_priorityQueues[ priority ].Add( item );
+		}
+
+		#endregion
+
+		#region IAsyncCollection<T> Members
+
+		public int AwaiterCount
+		{
+			get { return Volatile.Read( ref _awaiterCount ); }
+		}
+
+		public void Add( T item )
+		{
+			Add( item, _priorityResolver( item ) );
 		}
 
 		public async Task<T> TakeAsync( System.Threading.CancellationToken cancellationToken )
