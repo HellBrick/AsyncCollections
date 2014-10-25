@@ -27,7 +27,7 @@ namespace HellBrick.Collections.Test
 			_collections[ 1 ].Add( 42 );
 
 			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
-			Assert.AreEqual( 42, result.Result );
+			Assert.AreEqual( 42, result.Value );
 			Assert.AreEqual( 1, result.CollectionIndex );
 		}
 
@@ -47,7 +47,7 @@ namespace HellBrick.Collections.Test
 			_collections[ 1 ].Add( 24 );
 
 			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
-			Assert.AreEqual( 42, result.Result );
+			Assert.AreEqual( 42, result.Value );
 			Assert.AreEqual( 0, result.CollectionIndex );
 		}
 
@@ -59,7 +59,7 @@ namespace HellBrick.Collections.Test
 
 			_collections[ 1 ].Add( 42 );
 			Assert.IsTrue( task.IsCompleted );
-			Assert.AreEqual( 42, task.Result.Result );
+			Assert.AreEqual( 42, task.Result.Value );
 			Assert.AreEqual( 1, task.Result.CollectionIndex );
 		}
 
