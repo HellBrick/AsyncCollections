@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace HellBrick.Collections.Internal
 {
+	/// <summary>
+	/// A simple <see cref="TaskCompletionSource{T}"/> wrapper that implements <see cref="IAwaiter{T}"/>.
+	/// </summary>
 	class CompletionSourceAwaiter<T>: IAwaiter<T>
 	{
 		private TaskCompletionSource<T> _completionSource;

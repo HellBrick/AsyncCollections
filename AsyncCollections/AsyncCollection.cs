@@ -129,7 +129,7 @@ namespace HellBrick.Collections
 		#region Static
 
 		/// <summary>
-		/// Removes and returns an item from one of the specified collection in an asynchronous manner.
+		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
 		/// </summary>
 		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections )
 		{
@@ -137,7 +137,7 @@ namespace HellBrick.Collections
 		}
 
 		/// <summary>
-		/// Removes and returns an item from one of the specified collection in an asynchronous manner.
+		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
 		/// </summary>
 		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
 		{
