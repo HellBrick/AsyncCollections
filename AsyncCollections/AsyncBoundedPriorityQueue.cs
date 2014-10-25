@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HellBrick.Collections
@@ -10,6 +11,8 @@ namespace HellBrick.Collections
 	{
 		private readonly Func<T, int> _priorityExtractor;
 		private readonly AsyncQueue<T>[] _priorityQueues;
+
+		private int _awaiterCount = 0;
 
 		#region Construction
 
@@ -41,7 +44,7 @@ namespace HellBrick.Collections
 
 		public int AwaiterCount
 		{
-			get { return _priorityQueues.Sum( q => q.AwaiterCount ); }
+			get { return Volatile.Read( ref _awaiterCount ); }
 		}
 
 		public void Add( T item )
@@ -64,8 +67,17 @@ namespace HellBrick.Collections
 
 		public async Task<T> TakeAsync( System.Threading.CancellationToken cancellationToken )
 		{
-			var result = await AsyncCollection<T>.TakeFromAnyAsync( _priorityQueues, cancellationToken ).ConfigureAwait( false );
-			return result.Value;
+			Interlocked.Increment( ref _awaiterCount );
+
+			try
+			{
+				var result = await AsyncCollection<T>.TakeFromAnyAsync( _priorityQueues, cancellationToken ).ConfigureAwait( false );
+				return result.Value;
+			}
+			finally
+			{
+				Interlocked.Decrement( ref _awaiterCount );
+			}
 		}
 
 		#endregion
