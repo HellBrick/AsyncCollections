@@ -95,7 +95,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\NuGet.CommandLine.2.8.3\tools\NuGet.exe" pack "$(ProjectPath)"</PostBuildEvent>
+    <PostBuildEvent>"$(SolutionDir)packages\Nuget.PCL.2.8.1\tools\NuGet.exe" pack "$(ProjectPath)"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
