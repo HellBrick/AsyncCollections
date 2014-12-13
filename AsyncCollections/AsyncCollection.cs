@@ -16,8 +16,8 @@ namespace HellBrick.Collections
 	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
 	public class AsyncCollection<T>: IAsyncCollection<T>
 	{
-		private IProducerConsumerCollection<T> _itemQueue;
-		private ConcurrentQueue<IAwaiter<T>> _awaiterQueue = new ConcurrentQueue<IAwaiter<T>>();
+		private readonly IProducerConsumerCollection<T> _itemQueue;
+		private readonly ConcurrentQueue<IAwaiter<T>> _awaiterQueue = new ConcurrentQueue<IAwaiter<T>>();
 
 		//	_queueBalance < 0 means there are free awaiters and not enough items.
 		//	_queueBalance > 0 means the opposite is true.

@@ -13,10 +13,10 @@ namespace HellBrick.Collections
 	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
 	public class AsyncBatchQueue<T>: IEnumerable<IReadOnlyList<T>>, IDisposable
 	{
-		private int _batchSize;
+		private readonly int _batchSize;
 		private volatile Batch _currentBatch;
-		private AsyncQueue<IReadOnlyList<T>> _batchQueue = new AsyncQueue<IReadOnlyList<T>>();
-		private Timer _flushTimer;
+		private readonly AsyncQueue<IReadOnlyList<T>> _batchQueue = new AsyncQueue<IReadOnlyList<T>>();
+		private readonly Timer _flushTimer;
 
 		#region Construction
 
@@ -136,9 +136,9 @@ namespace HellBrick.Collections
 
 		private class Batch: IReadOnlyList<T>
 		{
-			private AsyncBatchQueue<T> _queue;
-			private T[] _items;
-			private bool[] _finalizationFlags;
+			private readonly AsyncBatchQueue<T> _queue;
+			private readonly T[] _items;
+			private readonly bool[] _finalizationFlags;
 			private int _lastReservationIndex = -1;
 			private int _count = -1;
 

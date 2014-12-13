@@ -12,7 +12,7 @@ namespace HellBrick.Collections.Internal
 	/// </summary>
 	class CompletionSourceAwaiter<T>: IAwaiter<T>
 	{
-		private TaskCompletionSource<T> _completionSource;
+		private readonly TaskCompletionSource<T> _completionSource;
 
 		public CompletionSourceAwaiter( CancellationToken cancellationToken )
 		{

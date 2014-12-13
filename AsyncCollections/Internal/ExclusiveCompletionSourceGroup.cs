@@ -14,7 +14,7 @@ namespace HellBrick.Collections.Internal
 	class ExclusiveCompletionSourceGroup<T>
 	{
 		private int _completedSource = State.Locked;
-		private TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
+		private readonly TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
 		private BitVector32 _awaitersCreated = new BitVector32();
 
 		public Task<AnyResult<T>> Task
@@ -63,8 +63,8 @@ namespace HellBrick.Collections.Internal
 
 		private class ExclusiveCompletionSource: IAwaiter<T>
 		{
-			private ExclusiveCompletionSourceGroup<T> _group;
-			private int _id;
+			private readonly ExclusiveCompletionSourceGroup<T> _group;
+			private readonly int _id;
 
 			public ExclusiveCompletionSource( ExclusiveCompletionSourceGroup<T> group, int id )
 			{
