@@ -1,2 +1,3 @@
 *.suo
 /packages/
+*.csproj.user
