@@ -163,7 +163,7 @@ namespace HellBrick.Collections
 
 				//	The full fence prevents setting finalization flag before the actual item value is written.
 				_items[ index ] = item;
-				Thread.MemoryBarrier();
+				Interlocked.MemoryBarrier();
 				_finalizationFlags[ index ] = true;
 
 				return true;
@@ -199,7 +199,7 @@ namespace HellBrick.Collections
 				_queue._currentBatch = new Batch( _queue );
 
 				//	The full fence ensures that the current batch will never be added to the queue before _count is set.
-				Thread.MemoryBarrier();
+				Interlocked.MemoryBarrier();
 
 				_queue._batchQueue.Add( this );
 			}
@@ -212,11 +212,11 @@ namespace HellBrick.Collections
 					spin.SpinOnce();
 
 					//	The full fence prevents caching any part of _finalizationFlags[ index ] expression.
-					Thread.MemoryBarrier();
+					Interlocked.MemoryBarrier();
 				}
 
 				//	The full fence prevents reading item value before finalization flag is set.
-				Thread.MemoryBarrier();
+				Interlocked.MemoryBarrier();
 				return _items[ index ];
 			}
 
