@@ -15,11 +15,17 @@ namespace HellBrick.Collections.Internal
 	{
 		private int _completedSource = State.Locked;
 		private readonly TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
+		private readonly Task<AnyResult<T>> _task;
 		private BitVector32 _awaitersCreated = new BitVector32();
+
+		public ExclusiveCompletionSourceGroup()
+		{
+			_task = _realCompetionSource.Task.WithThreadAbortedFlag();
+		}
 
 		public Task<AnyResult<T>> Task
 		{
-			get { return _realCompetionSource.Task; }
+			get { return _task; }
 		}
 
 		public IAwaiter<T> TryCreateAwaiter( int index )

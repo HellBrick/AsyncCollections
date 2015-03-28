@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,27 +34,63 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
-		public void AddingItemCompletesPendingTask()
+		public async Task AddingItemCompletesPendingTask()
 		{
 			var itemTask = Collection.TakeAsync( CancellationToken.None );
 			Assert.IsFalse( itemTask.IsCompleted );
 
 			Collection.Add( 42 );
-			Assert.IsTrue( itemTask.IsCompleted );
-			Assert.AreEqual( 42, itemTask.Result );
+			Assert.AreEqual( 42, await itemTask );
 		}
 
 		[TestMethod]
-		public void CancelledTakeCancelsTask()
+		public async Task CancelledTakeCancelsTask()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
 			var itemTask = Collection.TakeAsync( cancelSource.Token );
 			cancelSource.Cancel();
-			Assert.IsTrue( itemTask.IsCanceled );
+
+			try
+			{
+				await itemTask;
+				Assert.Fail( "Awaiting a canceled task expected to throw an exception" );
+			}
+			catch ( TaskCanceledException )
+			{
+			}
 
 			Collection.Add( 42 );
 			Assert.AreEqual( 1, Collection.Count );
 			Assert.AreEqual( 0, Collection.AwaiterCount );
+		}
+
+		[TestMethod]
+		public async Task ContinuationIsNotInlinedOnAddThread()
+		{
+			Task<bool> takeTask = TakeAndCheckIfInlinedAsync();
+			Collection.Add( 42 );
+			bool wasContinuationInlined = await takeTask;
+
+			Assert.IsFalse( wasContinuationInlined, "TakeAsync() continuation shouldn't have been inlined on the Add() thread." );
+		}
+
+		private async Task<bool> TakeAndCheckIfInlinedAsync()
+		{
+			await Collection.TakeAsync().ConfigureAwait( false );
+
+			MethodInfo addMethod = Collection.GetType().GetMethod( "Add", new Type[] { typeof( int ) } );
+			StackTrace stackTrace = new StackTrace();
+
+			//	Simple MethodInfo comparison doesn't work here:
+			//	addMethod is Add(int), but the method extracted from the stack trace is Add(T)
+			bool isAddMethodOnStack = stackTrace.GetFrames()
+				.Select( frame => frame.GetMethod() )
+				.Any( method =>
+					method.DeclaringType.IsGenericType &&
+					method.DeclaringType.GetGenericTypeDefinition() == addMethod.DeclaringType.GetGenericTypeDefinition() &&
+					method.Name == addMethod.Name );
+
+			return isAddMethodOnStack;
 		}
 
 		[TestMethod]
