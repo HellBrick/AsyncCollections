@@ -88,11 +88,6 @@ namespace System.Collections.Specialized
 			}
 			set
 			{
-#if DEBUG
-                if ((value & section.Mask) != value) {
-                    Debug.Fail("Value out of bounds on BitVector32 Section Set!");
-                }
-#endif
 				value <<= section.Offset;
 				int offsetMask = ( 0xFFFF & (int) section.Mask ) << section.Offset;
 				data = ( data & ~(uint) offsetMask ) | ( (uint) value & (uint) offsetMask );
