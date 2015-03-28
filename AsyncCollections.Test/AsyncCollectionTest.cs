@@ -34,23 +34,30 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
-		public void AddingItemCompletesPendingTask()
+		public async Task AddingItemCompletesPendingTask()
 		{
 			var itemTask = Collection.TakeAsync( CancellationToken.None );
 			Assert.IsFalse( itemTask.IsCompleted );
 
 			Collection.Add( 42 );
-			Assert.IsTrue( itemTask.IsCompleted );
-			Assert.AreEqual( 42, itemTask.Result );
+			Assert.AreEqual( 42, await itemTask );
 		}
 
 		[TestMethod]
-		public void CancelledTakeCancelsTask()
+		public async Task CancelledTakeCancelsTask()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
 			var itemTask = Collection.TakeAsync( cancelSource.Token );
 			cancelSource.Cancel();
-			Assert.IsTrue( itemTask.IsCanceled );
+
+			try
+			{
+				await itemTask;
+				Assert.Fail( "Awaiting a canceled task expected to throw an exception" );
+			}
+			catch ( TaskCanceledException )
+			{
+			}
 
 			Collection.Add( 42 );
 			Assert.AreEqual( 1, Collection.Count );
