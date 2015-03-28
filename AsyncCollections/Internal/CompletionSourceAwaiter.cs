@@ -13,10 +13,12 @@ namespace HellBrick.Collections.Internal
 	class CompletionSourceAwaiter<T>: IAwaiter<T>
 	{
 		private readonly TaskCompletionSource<T> _completionSource;
+		private readonly Task<T> _task;
 
 		public CompletionSourceAwaiter( CancellationToken cancellationToken )
 		{
 			_completionSource = new TaskCompletionSource<T>();
+			_task = _completionSource.Task.WithThreadAbortedFlag();
 
 			cancellationToken.Register(
 				state =>
@@ -37,7 +39,7 @@ namespace HellBrick.Collections.Internal
 
 		public Task<T> Task
 		{
-			get { return _completionSource.Task; }
+			get { return _task; }
 		}
 
 		#endregion
