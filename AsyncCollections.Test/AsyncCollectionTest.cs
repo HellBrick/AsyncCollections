@@ -71,7 +71,7 @@ namespace HellBrick.Collections.Test
 		{
 			await Collection.TakeAsync().ConfigureAwait( false );
 
-			MethodInfo addMethod = Collection.GetType().GetMethod( "Add" );
+			MethodInfo addMethod = Collection.GetType().GetMethod( "Add", new Type[] { typeof( int ) } );
 			StackTrace stackTrace = new StackTrace();
 
 			//	Simple MethodInfo comparison doesn't work here:
