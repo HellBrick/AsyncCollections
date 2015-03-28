@@ -60,30 +60,30 @@ namespace HellBrick.Collections.Test
 		[TestMethod]
 		public async Task ContinuationIsNotInlinedOnAddThread()
 		{
-			MethodInfo addMethod = Collection.GetType().GetMethod( "Add" );
-
-			Task<bool> takeTask = Task.Run(
-				async () =>
-				{
-					await Collection.TakeAsync().ConfigureAwait( false );
-
-					//	Simple MethodInfo comparison doesn't work here:
-					//	addMethod is Add(int), but the method extracted from the stack trace is Add(T)
-					StackTrace stackTrace = new StackTrace();
-					bool isAddMethodOnStack = stackTrace.GetFrames()
-						.Select( frame => frame.GetMethod() )
-						.Any( method =>
-							method.DeclaringType.IsGenericType &&
-							method.DeclaringType.GetGenericTypeDefinition() == addMethod.DeclaringType.GetGenericTypeDefinition() &&
-							method.Name == addMethod.Name );
-
-					return isAddMethodOnStack;
-				} );
-
+			Task<bool> takeTask = TakeAndCheckIfInlinedAsync();
 			Collection.Add( 42 );
-			bool wasContinuationInlined = await takeTask;			
+			bool wasContinuationInlined = await takeTask;
 
 			Assert.IsFalse( wasContinuationInlined, "TakeAsync() continuation shouldn't have been inlined on the Add() thread." );
+		}
+
+		private async Task<bool> TakeAndCheckIfInlinedAsync()
+		{
+			await Collection.TakeAsync().ConfigureAwait( false );
+
+			MethodInfo addMethod = Collection.GetType().GetMethod( "Add" );
+			StackTrace stackTrace = new StackTrace();
+
+			//	Simple MethodInfo comparison doesn't work here:
+			//	addMethod is Add(int), but the method extracted from the stack trace is Add(T)
+			bool isAddMethodOnStack = stackTrace.GetFrames()
+				.Select( frame => frame.GetMethod() )
+				.Any( method =>
+					method.DeclaringType.IsGenericType &&
+					method.DeclaringType.GetGenericTypeDefinition() == addMethod.DeclaringType.GetGenericTypeDefinition() &&
+					method.Name == addMethod.Name );
+
+			return isAddMethodOnStack;
 		}
 
 		[TestMethod]
