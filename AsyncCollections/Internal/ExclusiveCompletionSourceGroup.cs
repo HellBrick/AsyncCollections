@@ -55,7 +55,7 @@ namespace HellBrick.Collections.Internal
 				{
 					ExclusiveCompletionSourceGroup<T> group = state as ExclusiveCompletionSourceGroup<T>;
 					if ( Interlocked.CompareExchange( ref group._completedSource, State.Canceled, State.Unlocked ) == State.Unlocked )
-						_realCompetionSource.SetCanceled();
+						group._realCompetionSource.SetCanceled();
 				},
 				this,
 				useSynchronizationContext : false );
