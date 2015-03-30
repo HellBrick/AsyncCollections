@@ -65,12 +65,12 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
-		public async Task ContinuationIsNotInlinedOnAddThread()
+		public void ContinuationIsNotInlinedOnAddThread()
 		{
 			Task<int> takeTask = TakeAndReturnContinuationThreadIdAsync();
 			int addThreadID = Thread.CurrentThread.ManagedThreadId;
 			Collection.Add( 42 );
-			int continuationThreadID = await takeTask;
+			int continuationThreadID = takeTask.GetAwaiter().GetResult();
 
 			Assert.AreNotEqual( addThreadID, continuationThreadID, "TakeAsync() continuation shouldn't have been inlined on the Add() thread." );
 		}
