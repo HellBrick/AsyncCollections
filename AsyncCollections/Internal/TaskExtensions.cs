@@ -10,7 +10,7 @@ namespace HellBrick.Collections.Internal
 {
 	internal static class TaskExtensions
 	{
-		public static async Task<T> WithThreadAbortedFlag<T>( this Task<T> task )
+		public static async Task<T> WithYield<T>( this Task<T> task )
 		{
 			var result = await task.ConfigureAwait( false );
 			await Task.Yield();
