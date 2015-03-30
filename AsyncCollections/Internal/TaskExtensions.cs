@@ -12,8 +12,9 @@ namespace HellBrick.Collections.Internal
 	{
 		public static async Task<T> WithThreadAbortedFlag<T>( this Task<T> task )
 		{
+			var result = await task.ConfigureAwait( false );
 			await Task.Yield();
-			return await task;
+			return result;
 		}
 	}
 }
