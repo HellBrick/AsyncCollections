@@ -65,7 +65,7 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
-		public Task ContinuationIsNotInlinedOnAddThread()
+		public void ContinuationIsNotInlinedOnAddThread()
 		{
 			// no awaits in this method, we must hold thread
 
