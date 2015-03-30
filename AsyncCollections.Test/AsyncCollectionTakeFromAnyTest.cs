@@ -52,15 +52,16 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
-		public void ReturnsItemIfItIsAddedLater()
+		public async Task ReturnsItemIfItIsAddedLater()
 		{
 			var task = AsyncCollection<int>.TakeFromAnyAsync( _collections );
 			Assert.IsFalse( task.IsCompleted );
 
 			_collections[ 1 ].Add( 42 );
+			var result = await task;
 			Assert.IsTrue( task.IsCompleted );
-			Assert.AreEqual( 42, task.Result.Value );
-			Assert.AreEqual( 1, task.Result.CollectionIndex );
+			Assert.AreEqual( 42, result.Value );
+			Assert.AreEqual( 1, result.CollectionIndex );
 		}
 
 		[TestMethod]
