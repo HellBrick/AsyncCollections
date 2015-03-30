@@ -59,7 +59,6 @@ namespace HellBrick.Collections.Test
 
 			_collections[ 1 ].Add( 42 );
 			var result = await task;
-			Assert.IsTrue( task.IsCompleted );
 			Assert.AreEqual( 42, result.Value );
 			Assert.AreEqual( 1, result.CollectionIndex );
 		}
