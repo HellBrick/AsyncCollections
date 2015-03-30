@@ -20,7 +20,7 @@ namespace HellBrick.Collections.Internal
 
 		public ExclusiveCompletionSourceGroup()
 		{
-			_task = _realCompetionSource.Task.WithThreadAbortedFlag();
+			_task = _realCompetionSource.Task.WithYield();
 		}
 
 		public Task<AnyResult<T>> Task

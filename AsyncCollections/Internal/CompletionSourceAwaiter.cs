@@ -18,7 +18,7 @@ namespace HellBrick.Collections.Internal
 		public CompletionSourceAwaiter( CancellationToken cancellationToken )
 		{
 			_completionSource = new TaskCompletionSource<T>();
-			_task = _completionSource.Task.WithThreadAbortedFlag();
+			_task = _completionSource.Task.WithYield();
 
 			cancellationToken.Register(
 				state =>
