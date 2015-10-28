@@ -88,20 +88,16 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<T> TakeAsync( CancellationToken cancellationToken )
-		{
-			CompletionSourceAwaiter<T> awaiter = new CompletionSourceAwaiter<T>( cancellationToken );
-			return TakeAsync( awaiter );
-		}
+		public Task<T> TakeAsync( CancellationToken cancellationToken ) => TakeAsync( new CompletionSourceAwaiterFactory<T>( cancellationToken ) );
 
-		private Task<T> TakeAsync( IAwaiter<T> awaiter )
+		private Task<T> TakeAsync<TAwaiterFactory>( TAwaiterFactory awaiterFactory ) where TAwaiterFactory : IAwaiterFactory<T>
 		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
 
 			if ( balanceAfterCurrentAwaiter < 0 )
 			{
 				//	Awaiters are dominating, so we can safely add a new awaiter to the queue.
-
+				IAwaiter<T> awaiter = awaiterFactory.CreateAwaiter();
 				_awaiterQueue.Enqueue( awaiter );
 				return awaiter.Task;
 			}
@@ -181,13 +177,11 @@ namespace HellBrick.Collections
 
 		private static AnyResult<T>? TryTakeFast( ExclusiveCompletionSourceGroup<T> exclusiveSources, AsyncCollection<T> collection, int index )
 		{
-			IAwaiter<T> awaiter = exclusiveSources.TryCreateAwaiter( index );
-
 			//	This can happen if the awaiter has already been created during the fast route.
-			if ( awaiter == null )
+			if ( exclusiveSources.IsAwaiterCreated( index ) )
 				return null;
 
-			Task<T> collectionTask = collection.TakeAsync( awaiter );
+			Task<T> collectionTask = collection.TakeAsync( exclusiveSources.CreateAwaiterFactory( index ) );
 
 			//	One of the collections already had an item and returned it directly
 			if ( collectionTask != null && collectionTask.IsCompleted )
