@@ -14,7 +14,7 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe collection that allows asynchronous consuming.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
-	public class AsyncCollection<T>: IAsyncCollection<T>
+	public class AsyncCollection<T> : IAsyncCollection<T>
 	{
 		private readonly IProducerConsumerCollection<T> _itemQueue;
 		private readonly ConcurrentQueue<IAwaiter<T>> _awaiterQueue = new ConcurrentQueue<IAwaiter<T>>();
@@ -245,8 +245,8 @@ namespace HellBrick.Collections
 	}
 
 	[Obsolete( "AsyncCollection<T> should be used directly instead." )]
-	public class AsyncCollection<TItem, TItemQueue>: AsyncCollection<TItem>
-		where TItemQueue: IProducerConsumerCollection<TItem>, new()
+	public class AsyncCollection<TItem, TItemQueue> : AsyncCollection<TItem>
+		where TItemQueue : IProducerConsumerCollection<TItem>, new()
 	{
 		public AsyncCollection()
 			: base( new TItemQueue() )

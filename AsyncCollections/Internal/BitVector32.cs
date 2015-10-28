@@ -139,7 +139,7 @@ namespace System.Collections.Specialized
 				return 1;
 			}
 
-			if ( previous == unchecked( (int) 0x80000000 ) )
+			if ( previous == unchecked((int) 0x80000000) )
 			{
 				throw new InvalidOperationException( _vectorIsFullMessage );
 			}
@@ -167,7 +167,7 @@ namespace System.Collections.Specialized
 				value |= 0x1;
 			}
 
-			return unchecked( (short) value );
+			return unchecked((short) value);
 		}
 
 		/// <devdoc>
@@ -193,9 +193,9 @@ namespace System.Collections.Specialized
 				throw new ArgumentException( "Argument 'maxValue' should be larger than 0." );
 			}
 #if DEBUG
-            int maskCheck = CreateMaskFromHighValue(maxValue);
-            int offsetCheck = priorOffset + CountBitsSet(priorMask);
-            Debug.Assert(maskCheck <= short.MaxValue && offsetCheck < 32, "Overflow on BitVector32");
+			int maskCheck = CreateMaskFromHighValue( maxValue );
+			int offsetCheck = priorOffset + CountBitsSet( priorMask );
+			Debug.Assert( maskCheck <= short.MaxValue && offsetCheck < 32, "Overflow on BitVector32" );
 #endif
 			short offset = (short) ( priorOffset + CountBitsSet( priorMask ) );
 			if ( offset >= 32 )

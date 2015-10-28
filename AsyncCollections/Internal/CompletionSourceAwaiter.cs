@@ -10,7 +10,7 @@ namespace HellBrick.Collections.Internal
 	/// <summary>
 	/// A simple <see cref="TaskCompletionSource{T}"/> wrapper that implements <see cref="IAwaiter{T}"/>.
 	/// </summary>
-	internal class CompletionSourceAwaiter<T>: IAwaiter<T>
+	internal class CompletionSourceAwaiter<T> : IAwaiter<T>
 	{
 		private readonly TaskCompletionSource<T> _completionSource;
 		private readonly Task<T> _task;
@@ -27,7 +27,7 @@ namespace HellBrick.Collections.Internal
 					awaiter.TrySetCanceled();
 				},
 				_completionSource,
-				useSynchronizationContext : false );
+				useSynchronizationContext: false );
 		}
 
 		#region IAwaiter<T> Members

@@ -11,7 +11,7 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe collection that groups the items added to it into batches and allows consuming them asynchronously.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
-	public class AsyncBatchQueue<T>: IEnumerable<IReadOnlyList<T>>, IDisposable
+	public class AsyncBatchQueue<T> : IEnumerable<IReadOnlyList<T>>, IDisposable
 	{
 		private readonly int _batchSize;
 		private volatile Batch _currentBatch;
@@ -134,7 +134,7 @@ namespace HellBrick.Collections
 
 		#endregion
 
-		private class Batch: IReadOnlyList<T>
+		private class Batch : IReadOnlyList<T>
 		{
 			private readonly AsyncBatchQueue<T> _queue;
 			private readonly T[] _items;

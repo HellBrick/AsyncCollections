@@ -11,7 +11,7 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe stack that allows asynchronous consuming.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the stack.</typeparam>
-	public class AsyncStack<T>: AsyncCollection<T>
+	public class AsyncStack<T> : AsyncCollection<T>
 	{
 		/// <summary>
 		/// Initializes a new empty instance of <see cref="AsyncStack{T}"/>.

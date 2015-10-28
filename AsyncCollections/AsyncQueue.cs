@@ -11,7 +11,7 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe queue that allows asynchronous consuming.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the queue.</typeparam>
-	public class AsyncQueue<T>: AsyncCollection<T>
+	public class AsyncQueue<T> : AsyncCollection<T>
 	{
 		/// <summary>
 		/// Initializes a new empty instance of <see cref="AsyncQueue{T}"/>.

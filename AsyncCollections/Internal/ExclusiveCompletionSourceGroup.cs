@@ -58,7 +58,7 @@ namespace HellBrick.Collections.Internal
 						group._realCompetionSource.SetCanceled();
 				},
 				this,
-				useSynchronizationContext : false );
+				useSynchronizationContext: false );
 		}
 		private static class State
 		{
@@ -67,7 +67,7 @@ namespace HellBrick.Collections.Internal
 			public const int Canceled = Int32.MinValue;
 		}
 
-		private class ExclusiveCompletionSource: IAwaiter<T>
+		private class ExclusiveCompletionSource : IAwaiter<T>
 		{
 			private readonly ExclusiveCompletionSourceGroup<T> _group;
 			private readonly int _id;
