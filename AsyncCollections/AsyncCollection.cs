@@ -91,17 +91,17 @@ namespace HellBrick.Collections
 		public Task<T> TakeAsync( CancellationToken cancellationToken )
 		{
 			CompletionSourceAwaiter<T> awaiter = new CompletionSourceAwaiter<T>( cancellationToken );
-			return TakeAsync( awaiter );
+			return TakeAsync( new InstanceAwaiterFactory<T>( awaiter ) );
 		}
 
-		private Task<T> TakeAsync( IAwaiter<T> awaiter )
+		private Task<T> TakeAsync<TAwaiterFactory>( TAwaiterFactory awaiterFactory ) where TAwaiterFactory : IAwaiterFactory<T>
 		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
 
 			if ( balanceAfterCurrentAwaiter < 0 )
 			{
 				//	Awaiters are dominating, so we can safely add a new awaiter to the queue.
-
+				IAwaiter<T> awaiter = awaiterFactory.CreateAwaiter();
 				_awaiterQueue.Enqueue( awaiter );
 				return awaiter.Task;
 			}
@@ -187,7 +187,7 @@ namespace HellBrick.Collections
 			if ( awaiter == null )
 				return null;
 
-			Task<T> collectionTask = collection.TakeAsync( awaiter );
+			Task<T> collectionTask = collection.TakeAsync( new InstanceAwaiterFactory<T>( awaiter ) );
 
 			//	One of the collections already had an item and returned it directly
 			if ( collectionTask != null && collectionTask.IsCompleted )
