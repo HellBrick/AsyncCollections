@@ -181,8 +181,7 @@ namespace HellBrick.Collections
 			if ( exclusiveSources.IsAwaiterCreated( index ) )
 				return null;
 
-			IAwaiter<T> awaiter = exclusiveSources.CreateAwaiter( index );
-			Task<T> collectionTask = collection.TakeAsync( new InstanceAwaiterFactory<T>( awaiter ) );
+			Task<T> collectionTask = collection.TakeAsync( exclusiveSources.CreateAwaiterFactory( index ) );
 
 			//	One of the collections already had an item and returned it directly
 			if ( collectionTask != null && collectionTask.IsCompleted )

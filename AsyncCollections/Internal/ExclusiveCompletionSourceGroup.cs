@@ -30,7 +30,9 @@ namespace HellBrick.Collections.Internal
 
 		public bool IsAwaiterCreated( int index ) => _awaitersCreated[ BitVector32.CreateMask( index ) ];
 
-		public IAwaiter<T> CreateAwaiter( int index )
+		public Factory CreateAwaiterFactory( int index ) => new Factory( this, index );
+
+		private IAwaiter<T> CreateAwaiter( int index )
 		{
 			int mask = BitVector32.CreateMask( index );
 			_awaitersCreated[ mask ] = true;
@@ -111,6 +113,42 @@ namespace HellBrick.Collections.Internal
 				//	The value will never be actually used.
 				get { return null; }
 			}
+
+			#endregion
+		}
+
+		public struct Factory : IAwaiterFactory<T>, IEquatable<Factory>
+		{
+			private readonly ExclusiveCompletionSourceGroup<T> _group;
+			private readonly int _index;
+
+			public Factory( ExclusiveCompletionSourceGroup<T> group, int index )
+			{
+				_group = group;
+				_index = index;
+			}
+
+			public IAwaiter<T> CreateAwaiter() => _group.CreateAwaiter( _index );
+
+			#region IEquatable<Factory>
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					const int prime = -1521134295;
+					int hash = 12345701;
+					hash = hash * prime + EqualityComparer<ExclusiveCompletionSourceGroup<T>>.Default.GetHashCode( _group );
+					hash = hash * prime + EqualityComparer<int>.Default.GetHashCode( _index );
+					return hash;
+				}
+			}
+
+			public bool Equals( Factory other ) => EqualityComparer<ExclusiveCompletionSourceGroup<T>>.Default.Equals( _group, other._group ) && EqualityComparer<int>.Default.Equals( _index, other._index );
+			public override bool Equals( object obj ) => obj is Factory && Equals( (Factory) obj );
+
+			public static bool operator ==( Factory x, Factory y ) => x.Equals( y );
+			public static bool operator !=( Factory x, Factory y ) => !x.Equals( y );
 
 			#endregion
 		}
