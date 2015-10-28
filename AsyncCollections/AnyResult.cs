@@ -11,29 +11,20 @@ namespace HellBrick.Collections
 	/// </summary>
 	public struct AnyResult<T>
 	{
-		private T _value;
-		private int _collectionIndex;
-
 		public AnyResult( T value, int collectionIndex )
 		{
-			_value = value;
-			_collectionIndex = collectionIndex;
+			Value = value;
+			CollectionIndex = collectionIndex;
 		}
 
 		/// <summary>
 		/// Gets the item retrieved from a collection.
 		/// </summary>
-		public T Value
-		{
-			get { return _value; }
-		}
+		public T Value { get; }
 
 		/// <summary>
 		/// Gets the index of the collection the item was retrieved from.
 		/// </summary>
-		public int CollectionIndex
-		{
-			get { return _collectionIndex; }
-		}
+		public int CollectionIndex { get; }
 	}
 }
