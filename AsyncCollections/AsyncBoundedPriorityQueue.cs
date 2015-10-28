@@ -11,7 +11,7 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe queue with a bounded number of priority levels.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the queue.</typeparam>
-	public class AsyncBoundedPriorityQueue<T>: IAsyncCollection<T>
+	public class AsyncBoundedPriorityQueue<T> : IAsyncCollection<T>
 	{
 		private readonly Func<T, int> _priorityResolver;
 		private readonly AsyncQueue<T>[] _priorityQueues;

@@ -9,7 +9,7 @@ namespace HellBrick.Collections.Internal
 	/// <summary>
 	/// Represents an abstract item awaiter.
 	/// </summary>
-	interface IAwaiter<T>
+	internal interface IAwaiter<T>
 	{
 		/// <summary>
 		/// <para>Attempts to complete the awaiter with a specified result.</para>

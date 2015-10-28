@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HellBrick.Collections.Internal
 {
-	static class CanceledTask<T>
+	internal static class CanceledTask<T>
 	{
 		static CanceledTask()
 		{
