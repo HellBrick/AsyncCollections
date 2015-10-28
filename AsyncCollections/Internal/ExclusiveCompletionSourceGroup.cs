@@ -16,7 +16,7 @@ namespace HellBrick.Collections.Internal
 		private int _completedSource = State.Locked;
 		private readonly TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
 		private readonly Task<AnyResult<T>> _task;
-		private BitVector32 _awaitersCreated = new BitVector32();
+		private BitArray32 _awaitersCreated = BitArray32.Empty;
 
 		public ExclusiveCompletionSourceGroup()
 		{
@@ -28,14 +28,12 @@ namespace HellBrick.Collections.Internal
 			get { return _task; }
 		}
 
-		public bool IsAwaiterCreated( int index ) => _awaitersCreated[ BitVector32.CreateMask( index ) ];
-
+		public bool IsAwaiterCreated( int index ) => _awaitersCreated.IsBitSet( index );
 		public Factory CreateAwaiterFactory( int index ) => new Factory( this, index );
 
 		private IAwaiter<T> CreateAwaiter( int index )
 		{
-			int mask = BitVector32.CreateMask( index );
-			_awaitersCreated[ mask ] = true;
+			_awaitersCreated = _awaitersCreated.WithBitSet( index );
 			return new ExclusiveCompletionSource( this, index );
 		}
 
