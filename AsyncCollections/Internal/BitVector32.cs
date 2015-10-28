@@ -29,13 +29,18 @@ namespace System.Collections.Specialized
 	using System.Text;
 	using System;
 
+
 	/// <devdoc>
 	///    <para>Provides a simple light bit vector with easy integer or Boolean access to
 	///       a 32 bit storage.</para>
 	/// </devdoc>
+	[Diagnostics.CodeAnalysis.SuppressMessage( "Design", "HB.Struct.Implement IEquatable<T>:Structs should implement IEquatable<T>", Justification = "Copied as is from reference source" )]
+	[Diagnostics.CodeAnalysis.SuppressMessage( "Design", "Implement operator ==:Structs should implement operator ==", Justification = "Copied as is from reference source" )]
+	[Diagnostics.CodeAnalysis.SuppressMessage( "Design", "Implement operator !=:Structs should implement operator !=", Justification = "Copied as is from reference source" )]
 	public struct BitVector32
 	{
 		private const string _vectorIsFullMessage = "Bit vector is full.";
+		[Diagnostics.CodeAnalysis.SuppressMessage( "Design", "HB.Struct.ReadOnlyFields:Struct fields should be readonly", Justification = "Copied as is from reference source" )]
 		private uint data;
 
 		/// <devdoc>
