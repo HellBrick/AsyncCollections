@@ -124,7 +124,7 @@ namespace HellBrick.Collections
 
 		#region Static
 
-		internal const int TakeFromAnyMaxCollections = 32;
+		internal const int TakeFromAnyMaxCollections = BitArray32.BitCapacity;
 
 		/// <summary>
 		/// Removes and returns an item from one of the specified collections in an asynchronous manner.

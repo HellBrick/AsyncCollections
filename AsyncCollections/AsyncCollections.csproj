@@ -71,8 +71,8 @@
     <Compile Include="AsyncQueue.cs" />
     <Compile Include="AsyncStack.cs" />
     <Compile Include="IAsyncCollection.cs" />
+    <Compile Include="Internal\BitArray32.cs" />
     <Compile Include="Internal\IAwaiterFactory.cs" />
-    <Compile Include="Internal\BitVector32.cs" />
     <Compile Include="Internal\CancelledTask.cs" />
     <Compile Include="Internal\CompletionSourceAwaiterFactory.cs" />
     <Compile Include="Internal\ExclusiveCompletionSourceGroup.cs" />
