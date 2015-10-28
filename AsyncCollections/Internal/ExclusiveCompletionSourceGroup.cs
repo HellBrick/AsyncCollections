@@ -11,7 +11,7 @@ namespace HellBrick.Collections.Internal
 	/// <summary>
 	/// A set of exclusive awaiters that allows only one of the awaiters to be completed.
 	/// </summary>
-	class ExclusiveCompletionSourceGroup<T>
+	internal class ExclusiveCompletionSourceGroup<T>
 	{
 		private int _completedSource = State.Locked;
 		private readonly TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
