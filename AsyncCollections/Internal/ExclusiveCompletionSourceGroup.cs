@@ -28,12 +28,11 @@ namespace HellBrick.Collections.Internal
 			get { return _task; }
 		}
 
-		public IAwaiter<T> TryCreateAwaiter( int index )
+		public bool IsAwaiterCreated( int index ) => _awaitersCreated[ BitVector32.CreateMask( index ) ];
+
+		public IAwaiter<T> CreateAwaiter( int index )
 		{
 			int mask = BitVector32.CreateMask( index );
-			if ( _awaitersCreated[ mask ] )
-				return null;
-
 			_awaitersCreated[ mask ] = true;
 			return new ExclusiveCompletionSource( this, index );
 		}

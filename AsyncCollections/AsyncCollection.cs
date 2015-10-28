@@ -177,12 +177,11 @@ namespace HellBrick.Collections
 
 		private static AnyResult<T>? TryTakeFast( ExclusiveCompletionSourceGroup<T> exclusiveSources, AsyncCollection<T> collection, int index )
 		{
-			IAwaiter<T> awaiter = exclusiveSources.TryCreateAwaiter( index );
-
 			//	This can happen if the awaiter has already been created during the fast route.
-			if ( awaiter == null )
+			if ( exclusiveSources.IsAwaiterCreated( index ) )
 				return null;
 
+			IAwaiter<T> awaiter = exclusiveSources.CreateAwaiter( index );
 			Task<T> collectionTask = collection.TakeAsync( new InstanceAwaiterFactory<T>( awaiter ) );
 
 			//	One of the collections already had an item and returned it directly
