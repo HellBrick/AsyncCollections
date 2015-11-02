@@ -44,21 +44,31 @@ namespace HellBrick.Collections.Internal
 
 		public void UnlockCompetition( CancellationToken cancellationToken )
 		{
-			_completedSource = State.Unlocked;
-
-			//	The full fence prevents cancellation callback registration (and therefore the cancellation) from being executed before the competition is unlocked.
-			Interlocked.MemoryBarrier();
-
 			cancellationToken.Register(
 				state =>
 				{
 					ExclusiveCompletionSourceGroup<T> group = state as ExclusiveCompletionSourceGroup<T>;
-					if ( Interlocked.CompareExchange( ref group._completedSource, State.Canceled, State.Unlocked ) == State.Unlocked )
+
+					/// There are 2 cases here.
+					/// 
+					/// #1: The token is canceled before <see cref="UnlockCompetition(CancellationToken)"/> is called, but after the token is validated higher up the stack.
+					/// Is this is the case, the cancellation callbak will be called synchronously while <see cref="_completedSource"/> is still set to <see cref="State.Locked"/>.
+					/// So the competition will never progress to <see cref="State.Unlocked"/> and we have to check for this explicitly.
+					/// 
+					/// #2: We're canceled after the competition has been unlocked.
+					/// If this is the case, we have a simple race against the awaiters to progress from <see cref="State.Unlocked"/> to <see cref="State.Canceled"/>.
+					if ( group.TryTransitionToCanceledIfStateIs( State.Locked ) || group.TryTransitionToCanceledIfStateIs( State.Unlocked ) )
 						group._realCompetionSource.SetCanceled();
 				},
 				this,
 				useSynchronizationContext: false );
+
+			// If the cancellation was processed synchronously, the state will already be set to Canceled and we must *NOT* unlock the competition.
+			Interlocked.CompareExchange( ref _completedSource, State.Unlocked, State.Locked );
 		}
+
+		private bool TryTransitionToCanceledIfStateIs( int requiredState ) => Interlocked.CompareExchange( ref _completedSource, State.Canceled, requiredState ) == requiredState;
+
 		private static class State
 		{
 			public const int Locked = -1;
