@@ -17,6 +17,7 @@ namespace HellBrick.Collections.Internal
 		private readonly TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
 		private readonly Task<AnyResult<T>> _task;
 		private BitArray32 _awaitersCreated = BitArray32.Empty;
+		private CancellationRegistrationHolder _cancellationRegistrationHolder;
 
 		public ExclusiveCompletionSourceGroup()
 		{
@@ -44,7 +45,7 @@ namespace HellBrick.Collections.Internal
 
 		public void UnlockCompetition( CancellationToken cancellationToken )
 		{
-			cancellationToken.Register(
+			CancellationTokenRegistration registration = cancellationToken.Register(
 				state =>
 				{
 					ExclusiveCompletionSourceGroup<T> group = state as ExclusiveCompletionSourceGroup<T>;
@@ -63,6 +64,11 @@ namespace HellBrick.Collections.Internal
 				this,
 				useSynchronizationContext: false );
 
+			// We can't do volatile reads/writes on a custom value type field, so we have to wrap the registration into a holder instance.
+			// But there's no point in allocating the wrapper if the token can never be canceled.
+			if ( cancellationToken.CanBeCanceled )
+				Volatile.Write( ref _cancellationRegistrationHolder, new CancellationRegistrationHolder( registration ) );
+
 			// If the cancellation was processed synchronously, the state will already be set to Canceled and we must *NOT* unlock the competition.
 			Interlocked.CompareExchange( ref _completedSource, State.Unlocked, State.Locked );
 		}
@@ -74,6 +80,16 @@ namespace HellBrick.Collections.Internal
 			public const int Locked = -1;
 			public const int Unlocked = -2;
 			public const int Canceled = Int32.MinValue;
+		}
+
+		private class CancellationRegistrationHolder
+		{
+			public CancellationRegistrationHolder( CancellationTokenRegistration registration )
+			{
+				Registration = registration;
+			}
+
+			public CancellationTokenRegistration Registration { get; }
 		}
 
 		private class ExclusiveCompletionSource : IAwaiter<T>
@@ -101,6 +117,10 @@ namespace HellBrick.Collections.Internal
 					{
 						//	We are the champions!
 						_group._realCompetionSource.SetResult( new AnyResult<T>( result, _id ) );
+
+						//	This also means we're the ones responsible for disposing the cancellation registration.
+						//	It's important to remember the holder can be null if the token is non-cancellable.
+						Volatile.Read( ref _group._cancellationRegistrationHolder )?.Registration.Dispose();
 						return true;
 					}
 
