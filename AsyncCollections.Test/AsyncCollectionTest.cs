@@ -44,6 +44,17 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
+		public void TakeWithCanceledTokenReturnsCanceledTask()
+		{
+			CancellationTokenSource cancelSource = new CancellationTokenSource();
+			cancelSource.Cancel();
+			Collection.Add( 42 );
+
+			Task<int> itemTask = Collection.TakeAsync( cancelSource.Token );
+			Assert.IsTrue( itemTask.IsCanceled, "The task should have been canceled." );
+		}
+
+		[TestMethod]
 		public async Task CancelledTakeCancelsTask()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();

@@ -88,7 +88,13 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<T> TakeAsync( CancellationToken cancellationToken ) => TakeAsync( new CompletionSourceAwaiterFactory<T>( cancellationToken ) );
+		public Task<T> TakeAsync( CancellationToken cancellationToken )
+		{
+			if ( cancellationToken.IsCancellationRequested )
+				return CanceledTask<T>.Value;
+
+			return TakeAsync( new CompletionSourceAwaiterFactory<T>( cancellationToken ) );
+		}
 
 		private Task<T> TakeAsync<TAwaiterFactory>( TAwaiterFactory awaiterFactory ) where TAwaiterFactory : IAwaiterFactory<T>
 		{
