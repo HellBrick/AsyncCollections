@@ -100,7 +100,13 @@
     <Analyzer Include="..\packages\HellBrick.Diagnostics.1.4.2.0\analyzers\dotnet\cs\HellBrick.Diagnostics.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)packages\Nuget.PCL.2.8.1\tools\NuGet.exe" pack "$(ProjectPath)"</PostBuildEvent>
-  </PropertyGroup>
+  <Target Name="CreateNugetPackage">
+    <Message Text="Creating Nuget package..." Importance="High" />
+    <Exec
+      Command="&quot;$(SolutionDir)packages\Nuget.PCL.2.8.1\tools\NuGet.exe&quot; pack &quot;$(ProjectPath)&quot; -OutputDirectory ."
+      WorkingDirectory="$(OutDir)" LogStandardErrorAsError="true" ConsoleToMSBuild="true">
+    </Exec>
+  </Target>
+  <Target Name="AfterBuild" DependsOnTargets="CreateNugetPackage">
+  </Target>
 </Project>
