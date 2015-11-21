@@ -112,7 +112,7 @@
       WorkingDirectory="$(OutDir)" LogStandardErrorAsError="true" ConsoleToMSBuild="true">
     </Exec>
   </Target>
-  <Target Name="CreateNugetPackage" DependsOnTargets="RunGitLink">
+  <Target Name="CreateNugetPackage" DependsOnTargets="RunGitLink" Condition=" '$(Configuration)' == 'Release' ">
     <Message Text="Creating Nuget package..." Importance="High" />
     <Exec
       Command="&quot;$(SolutionDir)packages\Nuget.PCL.2.8.1\tools\NuGet.exe&quot; pack &quot;$(ProjectPath)&quot; -OutputDirectory ."
