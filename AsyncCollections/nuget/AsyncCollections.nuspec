@@ -21,5 +21,8 @@
 		</releaseNotes>
 		<tags>async await AsyncCollection AsyncQueue</tags>
 	</metadata>
-	<files />
+	<files>
+		<!-- DLL is included automatically, so only the symbols are specified explicitly. -->
+		<file src="bin\$configuration$\$id$.pdb*" target="lib\portable-net451+win81+wpa81" />
+	</files>
 </package>
