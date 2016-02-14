@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace HellBrick.Collections.Test
 {
@@ -98,6 +99,64 @@ namespace HellBrick.Collections.Test
 				itemsTaken += ( await _queue.TakeAsync() ).Count;
 
 			Assert.AreEqual( insertThreads * itemsPerThread, itemsTaken );
+		}
+
+		[TestMethod]
+		public async Task NoRaceBetweenFlushOnAddAndOnDemand()
+		{
+			const int attempts = 100 * 1000;
+			const int batchSize = 5;
+			_queue = new AsyncBatchQueue<int>( batchSize );
+
+			for ( int attemptNumber = 0; attemptNumber < attempts; attemptNumber++ )
+			{
+				AddAllItemsButOne( batchSize );
+
+				using ( ManualResetEvent trigger = new ManualResetEvent( initialState: false ) )
+				{
+					Task addTask = Task.Run
+					(
+						() =>
+						{
+							trigger.WaitOne();
+							_queue.Add( 666 );
+						}
+					);
+
+					Task flushTask = Task.Run
+					(
+						() =>
+						{
+							trigger.WaitOne();
+							_queue.Flush();
+						}
+					);
+
+					trigger.Set();
+					await addTask;
+					await flushTask;
+
+					IReadOnlyList<int> batch = await _queue.TakeAsync();
+					List<int> allItems = batch.ToList();
+
+					// This happens if Flush occurred before Add, which means there's another item from Add left unflushed.
+					// Gotta flush once more to extract it.
+					if ( batch.Count < batchSize )
+					{
+						_queue.Flush();
+						IReadOnlyList<int> secondBatch = await _queue.TakeAsync();
+						allItems.AddRange( secondBatch );
+					}
+
+					Assert.IsTrue( allItems.Count <= batchSize, $"Double flush detected at attempt #{attemptNumber}. Items: {String.Join( ", ", allItems )}" );
+				}
+			}
+		}
+
+		private void AddAllItemsButOne( int batchSize )
+		{
+			for ( int itemIndex = 0; itemIndex < batchSize - 1; itemIndex++ )
+				_queue.Add( itemIndex );
 		}
 	}
 }

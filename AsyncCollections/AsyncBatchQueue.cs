@@ -175,7 +175,7 @@ namespace HellBrick.Collections
 
 				//	We don't flush if the batch doesn't have any items or if another thread is about to flush it.
 				//	However, we report success to avoid unnecessary spinning.
-				if ( expectedPreviousReservation < 0 || expectedPreviousReservation >= _queue._batchSize )
+				if ( expectedPreviousReservation < 0 || expectedPreviousReservation >= _queue._batchSize - 1 )
 					return true;
 
 				int previousReservation = Interlocked.CompareExchange( ref _lastReservationIndex, _queue._batchSize, expectedPreviousReservation );
