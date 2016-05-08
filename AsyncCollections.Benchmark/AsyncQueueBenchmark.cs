@@ -50,14 +50,19 @@ namespace HellBrick.AsyncCollections.Benchmark
 
 		private void DdosCurrentQueue()
 		{
+			DdosQueue( _currentQueue );
+		}
+
+		private static void DdosQueue( IAsyncCollection<int> queue )
+		{
 			IntHolder itemsTakenHolder = new IntHolder() { Value = 0 };
 			CancellationTokenSource consumerCancelSource = new CancellationTokenSource();
 			Task[] consumerTasks = Enumerable.Range( 0, _consumerThreadCount )
-				.Select( _ => Task.Run( () => RunConsumerAsync( _currentQueue, itemsTakenHolder, consumerCancelSource ) ) )
+				.Select( _ => Task.Run( () => RunConsumerAsync( queue, itemsTakenHolder, consumerCancelSource ) ) )
 				.ToArray();
 
 			Task[] producerTasks = Enumerable.Range( 0, _producerThreadCount )
-				.Select( _ => Task.Run( () => RunProducer( _currentQueue ) ) )
+				.Select( _ => Task.Run( () => RunProducer( queue ) ) )
 				.ToArray();
 
 			Task.WaitAll( producerTasks );
