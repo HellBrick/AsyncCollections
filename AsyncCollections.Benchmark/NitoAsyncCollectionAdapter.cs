@@ -9,7 +9,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 {
 	class NitoAsyncCollectionAdapter<T>: IAsyncCollection<T>
 	{
-		private Nito.AsyncEx.AsyncCollection<T> _collection;
+		private readonly Nito.AsyncEx.AsyncCollection<T> _collection;
 
 		public NitoAsyncCollectionAdapter()
 		{

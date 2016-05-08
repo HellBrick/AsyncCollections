@@ -13,7 +13,7 @@ namespace HellBrick.Collections.Test
 {
 	public class AsyncCollectionTakeFromAnyTest
 	{
-		private AsyncQueue<int>[] _collections;
+		private readonly AsyncQueue<int>[] _collections;
 
 		public AsyncCollectionTakeFromAnyTest()
 		{

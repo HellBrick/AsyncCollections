@@ -16,7 +16,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 		private const int _itemsAddedPerThread = 10000;
 		private const int _itemsAddedTotal = _producerThreadCount * _itemsAddedPerThread;
 
-		private BenchmarkCompetition _competition;
+		private readonly BenchmarkCompetition _competition;
 
 		private IAsyncCollection<int> _currentQueue;
 		private Task[] _consumerTasks;
