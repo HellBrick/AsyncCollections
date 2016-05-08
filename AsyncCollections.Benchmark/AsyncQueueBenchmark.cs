@@ -29,6 +29,11 @@ namespace HellBrick.AsyncCollections.Benchmark
 			AddTask( "System.Threading.Tasks.Dataflow.BufferBlock", () => new TplDataflowAdapter<int>() );
 		}
 
+		public void Run()
+		{
+			_competition.Run();
+		}
+
 		private void AddTask( string name, Func<IAsyncCollection<int>> factoryMethod )
 		{
 			_competition.AddTask(
@@ -69,6 +74,15 @@ namespace HellBrick.AsyncCollections.Benchmark
 			Task.WaitAll( consumerTasks );
 		}
 
+		private static void RunProducer( IAsyncCollection<int> queue )
+		{
+			for ( int i = 0; i < _itemsAddedPerThread; i++ )
+			{
+				int item = 42;
+				queue.Add( item );
+			}
+		}
+
 		private static async Task RunConsumerAsync( IAsyncCollection<int> queue, IntHolder itemsTakeHolder, CancellationTokenSource cancelSource )
 		{
 			try
@@ -89,23 +103,9 @@ namespace HellBrick.AsyncCollections.Benchmark
 			}
 		}
 
-		private static void RunProducer( IAsyncCollection<int> queue )
-		{
-			for ( int i = 0; i < _itemsAddedPerThread; i++ )
-			{
-				int item = 42;
-				queue.Add( item );
-			}
-		}
-
 		private class IntHolder
 		{
 			public int Value;
-		}
-
-		public void Run()
-		{
-			_competition.Run();
 		}
 	}
 }
