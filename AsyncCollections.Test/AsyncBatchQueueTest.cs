@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using System.Threading;
+using FluentAssertions;
 
 namespace HellBrick.Collections.Test
 {
@@ -38,12 +39,12 @@ namespace HellBrick.Collections.Test
 				_queue.Add( array[ index ] );
 
 			var takeTask = _queue.TakeAsync();
-			Assert.IsFalse( takeTask.IsCompleted );
+			takeTask.IsCompleted.Should().BeFalse();
 
 			_queue.Add( array[ index ] );
 			var batch = await takeTask;
 
-			CollectionAssert.AreEqual( array, batch.ToList() );
+			batch.Should().BeEqualTo( array );
 		}
 
 		[TestMethod]
@@ -58,7 +59,7 @@ namespace HellBrick.Collections.Test
 			_queue.Flush();
 			var batch = await _queue.TakeAsync();
 
-			CollectionAssert.AreEqual( array, batch.ToList() );
+			batch.Should().BeEqualTo( array );
 		}
 
 		[TestMethod]
@@ -70,7 +71,7 @@ namespace HellBrick.Collections.Test
 
 			await Task.Delay( flushPeriod + flushPeriod );
 			var batch = await _queue.TakeAsync();
-			CollectionAssert.AreEqual( new[] { 42 }, batch.ToList() );
+			batch.Should().BeEqualTo( new[] { 42 } );
 		}
 
 		[TestMethod]
@@ -98,7 +99,7 @@ namespace HellBrick.Collections.Test
 			while ( _queue.Count > 0 )
 				itemsTaken += ( await _queue.TakeAsync() ).Count;
 
-			Assert.AreEqual( insertThreads * itemsPerThread, itemsTaken );
+			itemsTaken.Should().Be( insertThreads * itemsPerThread );
 		}
 
 		[TestMethod]
@@ -148,7 +149,7 @@ namespace HellBrick.Collections.Test
 						allItems.AddRange( secondBatch );
 					}
 
-					Assert.IsTrue( allItems.Count <= batchSize, $"Double flush detected at attempt #{attemptNumber}. Items: {String.Join( ", ", allItems )}" );
+					allItems.Count.Should().BeLessOrEqualTo( batchSize, $"Double flush detected at attempt #{attemptNumber}. Items: {String.Join( ", ", allItems )}" );
 				}
 			}
 		}

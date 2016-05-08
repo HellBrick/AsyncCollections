@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FluentAssertions;
 using HellBrick.Collections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -21,7 +22,7 @@ namespace HellBrick.Collections.Test
 		{
 			Collection.Add( 42, 1 );
 			var result = await Collection.TakeAsync();
-			Assert.AreEqual( 42, result );
+			result.Should().Be( 42 );
 		}
 
 		[TestMethod]
@@ -31,7 +32,7 @@ namespace HellBrick.Collections.Test
 			Collection.Add( 999, 1 );
 
 			var result = await Collection.TakeAsync();
-			Assert.AreEqual( 42, result );
+			result.Should().Be( 42 );
 		}
 	}
 }
