@@ -54,18 +54,18 @@ namespace HellBrick.AsyncCollections.Benchmark
 		{
 			CancellationTokenSource consumerCancelSource = new CancellationTokenSource();
 			Task[] consumerTasks = Enumerable.Range( 0, _consumerThreadCount )
-				.Select( _ => Task.Run( () => RunConsumerAsync( consumerCancelSource ) ) )
+				.Select( _ => Task.Run( () => RunConsumerAsync( _currentQueue, consumerCancelSource ) ) )
 				.ToArray();
 
 			Task[] producerTasks = Enumerable.Range( 0, _producerThreadCount )
-				.Select( _ => Task.Run( () => RunProducer() ) )
+				.Select( _ => Task.Run( () => RunProducer( _currentQueue ) ) )
 				.ToArray();
 
 			Task.WaitAll( producerTasks );
 			Task.WaitAll( consumerTasks );
 		}
 
-		private async Task RunConsumerAsync( CancellationTokenSource cancelSource )
+		private async Task RunConsumerAsync( IAsyncCollection<int> queue, CancellationTokenSource cancelSource )
 		{
 			try
 			{
@@ -73,7 +73,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 
 				while ( true )
 				{
-					int item = await _currentQueue.TakeAsync( cancelToken ).ConfigureAwait( false );
+					int item = await queue.TakeAsync( cancelToken ).ConfigureAwait( false );
 					int itemsTakenLocal = Interlocked.Increment( ref _itemsTaken );
 
 					if ( itemsTakenLocal >= _itemsAddedTotal )
@@ -85,12 +85,12 @@ namespace HellBrick.AsyncCollections.Benchmark
 			}
 		}
 
-		private void RunProducer()
+		private static void RunProducer( IAsyncCollection<int> queue )
 		{
 			for ( int i = 0; i < _itemsAddedPerThread; i++ )
 			{
 				int item = 42;
-				_currentQueue.Add( item );
+				queue.Add( item );
 			}
 		}
 
