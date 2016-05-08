@@ -5,58 +5,40 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 using HellBrick.Collections;
 
 namespace HellBrick.AsyncCollections.Benchmark
 {
-	internal class AsyncQueueBenchmark
+	[Config( typeof( Config ) )]
+	public class AsyncQueueBenchmark
 	{
 		private const int _consumerThreadCount = 3;
 		private const int _producerThreadCount = 3;
 		private const int _itemsAddedPerThread = 10000;
 		private const int _itemsAddedTotal = _producerThreadCount * _itemsAddedPerThread;
 
-		private readonly BenchmarkCompetition _competition;
-
-		private IAsyncCollection<int> _currentQueue;
-
-		public AsyncQueueBenchmark()
+		private class Config : ManualConfig
 		{
-			_competition = new BenchmarkCompetition();
-			AddTask( "HellBrick.AsyncCollections.AsyncQueue", () => new AsyncQueue<int>() );
-			AddTask( "Nito.AsyncEx.AsyncCollection", () => new NitoAsyncCollectionAdapter<int>() );
-			AddTask( "System.Concurrent.BlockingCollection", () => new BlockingCollectionAdapter<int>() );
-			AddTask( "System.Threading.Tasks.Dataflow.BufferBlock", () => new TplDataflowAdapter<int>() );
+			public Config()
+			{
+				Add( Job.RyuJitX64.WithLaunchCount( 1 ) );
+			}
 		}
 
-		public void Run()
-		{
-			_competition.Run();
-		}
+		[Benchmark( Description = "HellBrick.AsyncCollections.AsyncQueue" )]
+		public void HellBrickAsyncQueue() => DdosQueue( new AsyncQueue<int>() );
 
-		private void AddTask( string name, Func<IAsyncCollection<int>> factoryMethod )
-		{
-			_competition.AddTask(
-				name,
-				initialize : () => Initialize( factoryMethod ),
-				clean : CleanUp,
-				action : () => DdosCurrentQueue() );
-		}
+		[Benchmark( Description = "Nito.AsyncEx.AsyncCollection" )]
+		public void NitoAsyncCollection() => DdosQueue( new NitoAsyncCollectionAdapter<int>() );
 
-		private void Initialize( Func<IAsyncCollection<int>> factoryMethod )
-		{
-			_currentQueue = factoryMethod();
-		}
+		[Benchmark( Description = "System.Concurrent.BlockingCollection" )]
+		public void SystemBlockingCollection() => DdosQueue( new BlockingCollectionAdapter<int>() );
 
-		private void CleanUp()
-		{
-			_currentQueue = null;
-		}
-
-		private void DdosCurrentQueue()
-		{
-			DdosQueue( _currentQueue );
-		}
+		[Benchmark( Description = "System.Threading.Tasks.Dataflow.BufferBlock" )]
+		public void DataflowBufferBlock() => DdosQueue( new TplDataflowAdapter<int>() );
 
 		private static void DdosQueue( IAsyncCollection<int> queue )
 		{
