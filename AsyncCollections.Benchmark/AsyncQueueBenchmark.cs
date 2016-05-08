@@ -73,16 +73,13 @@ namespace HellBrick.AsyncCollections.Benchmark
 			{
 				CancellationToken cancelToken = _cancelSource.Token;
 
-				while ( _itemsTaken < _itemsAddedTotal && !cancelToken.IsCancellationRequested )
+				while ( true )
 				{
 					int item = await _currentQueue.TakeAsync( cancelToken ).ConfigureAwait( false );
 					int itemsTakenLocal = Interlocked.Increment( ref _itemsTaken );
 
 					if ( itemsTakenLocal >= _itemsAddedTotal )
-					{
 						_cancelSource.Cancel();
-						break;
-					}
 				}
 			}
 			catch ( OperationCanceledException )
