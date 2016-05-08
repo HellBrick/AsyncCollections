@@ -88,7 +88,6 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
-		[Timeout( 30000 )]
 		public async Task RandomMultithreadingOperationsDontCrash()
 		{
 			int itemsTaken = 0;
