@@ -19,7 +19,6 @@ namespace HellBrick.AsyncCollections.Benchmark
 		private readonly BenchmarkCompetition _competition;
 
 		private IAsyncCollection<int> _currentQueue;
-		private CancellationTokenSource _cancelSource;
 		private int _itemsTaken;
 
 		public AsyncQueueBenchmark()
@@ -44,19 +43,18 @@ namespace HellBrick.AsyncCollections.Benchmark
 		{
 			_currentQueue = factoryMethod();
 			_itemsTaken = 0;
-			_cancelSource = new CancellationTokenSource();
 		}
 
 		private void CleanUp()
 		{
 			_currentQueue = null;
-			_cancelSource = null;
 		}
 
 		private void DdosCurrentQueue()
 		{
+			CancellationTokenSource consumerCancelSource = new CancellationTokenSource();
 			Task[] consumerTasks = Enumerable.Range( 0, _consumerThreadCount )
-				.Select( _ => Task.Run( () => RunConsumerAsync() ) )
+				.Select( _ => Task.Run( () => RunConsumerAsync( consumerCancelSource ) ) )
 				.ToArray();
 
 			Task[] producerTasks = Enumerable.Range( 0, _producerThreadCount )
@@ -67,11 +65,11 @@ namespace HellBrick.AsyncCollections.Benchmark
 			Task.WaitAll( consumerTasks );
 		}
 
-		private async Task RunConsumerAsync()
+		private async Task RunConsumerAsync( CancellationTokenSource cancelSource )
 		{
 			try
 			{
-				CancellationToken cancelToken = _cancelSource.Token;
+				CancellationToken cancelToken = cancelSource.Token;
 
 				while ( true )
 				{
@@ -79,7 +77,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 					int itemsTakenLocal = Interlocked.Increment( ref _itemsTaken );
 
 					if ( itemsTakenLocal >= _itemsAddedTotal )
-						_cancelSource.Cancel();
+						cancelSource.Cancel();
 				}
 			}
 			catch ( OperationCanceledException )
