@@ -8,24 +8,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using HellBrick.Collections;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	[TestClass]
 	public abstract class AsyncCollectionTest<TAsyncCollection> where TAsyncCollection: IAsyncCollection<int>
 	{
 		protected TAsyncCollection Collection { get; private set; }
 
-		[TestInitialize]
-		public void Initialize()
+		protected AsyncCollectionTest()
 		{
 			Collection = CreateCollection();
 		}
 
 		protected abstract TAsyncCollection CreateCollection();
 
-		[TestMethod]
+		[Fact]
 		public void TakingItemFromNonEmptyCollectionCompletesImmediately()
 		{
 			Collection.Add( 42 );
@@ -34,7 +32,7 @@ namespace HellBrick.Collections.Test
 			itemTask.Result.Should().Be( 42 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task AddingItemCompletesPendingTask()
 		{
 			var itemTask = Collection.TakeAsync( CancellationToken.None );
@@ -44,7 +42,7 @@ namespace HellBrick.Collections.Test
 			( await itemTask ).Should().Be( 42 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TakeWithCanceledTokenReturnsCanceledTask()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
@@ -55,7 +53,7 @@ namespace HellBrick.Collections.Test
 			itemTask.IsCanceled.Should().BeTrue( "The task should have been canceled." );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void CancelledTakeCancelsTask()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
@@ -70,7 +68,7 @@ namespace HellBrick.Collections.Test
 			Collection.AwaiterCount.Should().Be( 0 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ContinuationIsNotInlinedOnAddThread()
 		{
 			Task<int> takeTask = TakeAndReturnContinuationThreadIdAsync();
@@ -87,7 +85,7 @@ namespace HellBrick.Collections.Test
 			return Thread.CurrentThread.ManagedThreadId;
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task RandomMultithreadingOperationsDontCrash()
 		{
 			int itemsTaken = 0;
@@ -153,7 +151,6 @@ namespace HellBrick.Collections.Test
 		}
 	}
 
-	[TestClass]
 	public class AsyncQueueTest: AsyncCollectionTest<AsyncQueue<int>>
 	{
 		protected override AsyncQueue<int> CreateCollection()
@@ -162,7 +159,6 @@ namespace HellBrick.Collections.Test
 		}
 	}
 
-	[TestClass]
 	public class AsyncStackTest: AsyncCollectionTest<AsyncStack<int>>
 	{
 		protected override AsyncStack<int> CreateCollection()

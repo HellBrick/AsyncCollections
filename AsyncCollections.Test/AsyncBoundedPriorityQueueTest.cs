@@ -5,11 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using HellBrick.Collections;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	[TestClass]
 	public class AsyncBoundedPriorityQueueTest: AsyncCollectionTest<AsyncBoundedPriorityQueue<int>>
 	{
 		protected override AsyncBoundedPriorityQueue<int> CreateCollection()
@@ -17,7 +16,7 @@ namespace HellBrick.Collections.Test
 			return new AsyncBoundedPriorityQueue<int>( 2 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task ReturnsLowPriorityIfNoHighPriorityIsAvailable()
 		{
 			Collection.Add( 42, 1 );
@@ -25,7 +24,7 @@ namespace HellBrick.Collections.Test
 			result.Should().Be( 42 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task RespectsPriority()
 		{
 			Collection.Add( 42, 0 );

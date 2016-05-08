@@ -7,22 +7,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using HellBrick.Collections;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	[TestClass]
 	public class AsyncCollectionTakeFromAnyTest
 	{
 		private AsyncQueue<int>[] _collections;
 
-		[TestInitialize]
-		public void Initialize()
+		public AsyncCollectionTakeFromAnyTest()
 		{
 			_collections = new AsyncQueue<int>[ 2 ] { new AsyncQueue<int>(), new AsyncQueue<int>() };
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task ReturnsItemFromSecondIfFirstIsEmpty()
 		{
 			_collections[ 1 ].Add( 42 );
@@ -32,7 +30,7 @@ namespace HellBrick.Collections.Test
 			result.CollectionIndex.Should().Be( 1 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task NoUnnecessaryAwaitersAreQueued()
 		{
 			_collections[ 1 ].Add( 42 );
@@ -41,7 +39,7 @@ namespace HellBrick.Collections.Test
 			_collections[ 0 ].AwaiterCount.Should().Be( 0 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task RespectsCollectionOrder()
 		{
 			_collections[ 0 ].Add( 42 );
@@ -52,7 +50,7 @@ namespace HellBrick.Collections.Test
 			result.CollectionIndex.Should().Be( 0 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task ReturnsItemIfItIsAddedLater()
 		{
 			var task = AsyncCollection<int>.TakeFromAnyAsync( _collections );
@@ -64,7 +62,7 @@ namespace HellBrick.Collections.Test
 			result.CollectionIndex.Should().Be( 1 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void CancelsTaskWhenTokenIsCanceled()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
@@ -79,7 +77,7 @@ namespace HellBrick.Collections.Test
 			_collections[ 1 ].Count.Should().Be( 1 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DoesNothingIfTokenIsCanceledBeforeMethodCall()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();

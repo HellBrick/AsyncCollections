@@ -2,33 +2,31 @@
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 using System.Threading;
 using FluentAssertions;
+using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	[TestClass]
-	public class AsyncBatchQueueTest
+	public class AsyncBatchQueueTest : IDisposable
 	{
 		AsyncBatchQueue<int> _queue;
 
-		[TestCleanup]
-		public void CleanUp()
+		public void Dispose()
 		{
 			if ( _queue != null )
 				_queue.Dispose();
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ThrowsOnIncorrectBatchSize()
 		{
 			Action act = () => _queue = new AsyncBatchQueue<int>( 0 );
 			act.ShouldThrow<ArgumentOutOfRangeException>();
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task FlushesWhenBatchSizeIsReached()
 		{
 			int[] array = { 0, 1, 42 };
@@ -47,7 +45,7 @@ namespace HellBrick.Collections.Test
 			batch.Should().BeEqualTo( array );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task ManualFlushWorks()
 		{
 			int[] array = { 0, 1, 42 };
@@ -62,7 +60,7 @@ namespace HellBrick.Collections.Test
 			batch.Should().BeEqualTo( array );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task TimerFlushesPendingItems()
 		{
 			TimeSpan flushPeriod = TimeSpan.FromMilliseconds( 500 );
@@ -74,7 +72,7 @@ namespace HellBrick.Collections.Test
 			batch.Should().BeEqualTo( new[] { 42 } );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task MultithreadingInsertsDontCrash()
 		{
 			int insertThreads = 4;
@@ -102,7 +100,7 @@ namespace HellBrick.Collections.Test
 			itemsTaken.Should().Be( insertThreads * itemsPerThread );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task NoRaceBetweenFlushOnAddAndOnDemand()
 		{
 			const int attempts = 100 * 1000;
