@@ -14,7 +14,7 @@ namespace HellBrick.Collections.Test
 {
 	public abstract class AsyncCollectionTest<TAsyncCollection> where TAsyncCollection: IAsyncCollection<int>
 	{
-		protected TAsyncCollection Collection { get; private set; }
+		protected TAsyncCollection Collection { get; }
 
 		protected AsyncCollectionTest()
 		{
@@ -153,17 +153,11 @@ namespace HellBrick.Collections.Test
 
 	public class AsyncQueueTest: AsyncCollectionTest<AsyncQueue<int>>
 	{
-		protected override AsyncQueue<int> CreateCollection()
-		{
-			return new AsyncQueue<int>();
-		}
+		protected override AsyncQueue<int> CreateCollection() => new AsyncQueue<int>();
 	}
 
 	public class AsyncStackTest: AsyncCollectionTest<AsyncStack<int>>
 	{
-		protected override AsyncStack<int> CreateCollection()
-		{
-			return new AsyncStack<int>();
-		}
+		protected override AsyncStack<int> CreateCollection() => new AsyncStack<int>();
 	}
 }

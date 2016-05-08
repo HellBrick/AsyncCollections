@@ -13,11 +13,7 @@ namespace HellBrick.Collections.Test
 	{
 		AsyncBatchQueue<int> _queue;
 
-		public void Dispose()
-		{
-			if ( _queue != null )
-				_queue.Dispose();
-		}
+		public void Dispose() => _queue?.Dispose();
 
 		[Fact]
 		public void ThrowsOnIncorrectBatchSize()
