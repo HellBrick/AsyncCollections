@@ -15,10 +15,13 @@ namespace HellBrick.AsyncCollections.Benchmark
 	[Config( typeof( Config ) )]
 	public class AsyncQueueBenchmark
 	{
-		private const int _consumerThreadCount = 3;
-		private const int _producerThreadCount = 3;
+		[Params( 1, 3 )]
+		public int ConsumerTasks { get; set; }
+
+		[Params( 1, 3 )]
+		public int ProducerTasks { get; set; }
+
 		private const int _itemsAddedPerThread = 10000;
-		private const int _itemsAddedTotal = _producerThreadCount * _itemsAddedPerThread;
 
 		private class Config : ManualConfig
 		{
@@ -40,15 +43,16 @@ namespace HellBrick.AsyncCollections.Benchmark
 		[Benchmark( Description = "System.Threading.Tasks.Dataflow.BufferBlock" )]
 		public void DataflowBufferBlock() => DdosQueue( new TplDataflowAdapter<int>() );
 
-		private static void DdosQueue( IAsyncCollection<int> queue )
+		private void DdosQueue( IAsyncCollection<int> queue )
 		{
+			int itemsAddedTotal = ProducerTasks * _itemsAddedPerThread;
 			IntHolder itemsTakenHolder = new IntHolder() { Value = 0 };
 			CancellationTokenSource consumerCancelSource = new CancellationTokenSource();
-			Task[] consumerTasks = Enumerable.Range( 0, _consumerThreadCount )
-				.Select( _ => Task.Run( () => RunConsumerAsync( queue, itemsTakenHolder, consumerCancelSource ) ) )
+			Task[] consumerTasks = Enumerable.Range( 0, ConsumerTasks )
+				.Select( _ => Task.Run( () => RunConsumerAsync( queue, itemsTakenHolder, itemsAddedTotal, consumerCancelSource ) ) )
 				.ToArray();
 
-			Task[] producerTasks = Enumerable.Range( 0, _producerThreadCount )
+			Task[] producerTasks = Enumerable.Range( 0, ProducerTasks )
 				.Select( _ => Task.Run( () => RunProducer( queue ) ) )
 				.ToArray();
 
@@ -65,7 +69,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 			}
 		}
 
-		private static async Task RunConsumerAsync( IAsyncCollection<int> queue, IntHolder itemsTakeHolder, CancellationTokenSource cancelSource )
+		private static async Task RunConsumerAsync( IAsyncCollection<int> queue, IntHolder itemsTakeHolder, int itemsAddedTotal, CancellationTokenSource cancelSource )
 		{
 			try
 			{
@@ -76,7 +80,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 					int item = await queue.TakeAsync( cancelToken ).ConfigureAwait( false );
 					int itemsTakenLocal = Interlocked.Increment( ref itemsTakeHolder.Value );
 
-					if ( itemsTakenLocal >= _itemsAddedTotal )
+					if ( itemsTakenLocal >= itemsAddedTotal )
 						cancelSource.Cancel();
 				}
 			}
