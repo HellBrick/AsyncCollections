@@ -25,7 +25,7 @@ namespace HellBrick.Collections.Test
 		{
 			_collections[ 1 ].Add( 42 );
 
-			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
+			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections ).ConfigureAwait( true );
 			result.Value.Should().Be( 42 );
 			result.CollectionIndex.Should().Be( 1 );
 		}
@@ -35,7 +35,7 @@ namespace HellBrick.Collections.Test
 		{
 			_collections[ 1 ].Add( 42 );
 
-			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
+			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections ).ConfigureAwait( true );
 			_collections[ 0 ].AwaiterCount.Should().Be( 0 );
 		}
 
@@ -45,7 +45,7 @@ namespace HellBrick.Collections.Test
 			_collections[ 0 ].Add( 42 );
 			_collections[ 1 ].Add( 24 );
 
-			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
+			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections ).ConfigureAwait( true );
 			result.Value.Should().Be( 42 );
 			result.CollectionIndex.Should().Be( 0 );
 		}
@@ -57,7 +57,7 @@ namespace HellBrick.Collections.Test
 			task.IsCompleted.Should().BeFalse();
 
 			_collections[ 1 ].Add( 42 );
-			var result = await task;
+			var result = await task.ConfigureAwait( true );
 			result.Value.Should().Be( 42 );
 			result.CollectionIndex.Should().Be( 1 );
 		}

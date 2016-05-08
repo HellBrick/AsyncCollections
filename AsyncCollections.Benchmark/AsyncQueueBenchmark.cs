@@ -79,7 +79,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 
 				while ( _itemsTaken < _itemsAddedTotal && !cancelToken.IsCancellationRequested )
 				{
-					int item = await _currentQueue.TakeAsync( cancelToken );
+					int item = await _currentQueue.TakeAsync( cancelToken ).ConfigureAwait( false );
 					int itemsTakenLocal = Interlocked.Increment( ref _itemsTaken );
 
 					if ( itemsTakenLocal >= _itemsAddedTotal )
