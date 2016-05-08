@@ -5,88 +5,83 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 using HellBrick.Collections;
 
 namespace HellBrick.AsyncCollections.Benchmark
 {
-	internal class AsyncQueueBenchmark
+	[Config( typeof( Config ) )]
+	public class AsyncQueueBenchmark
 	{
-		private const int _consumerThreadCount = 3;
-		private const int _producerThreadCount = 3;
+		[Params( 1, 3 )]
+		public int ConsumerTasks { get; set; }
+
+		[Params( 1, 3 )]
+		public int ProducerTasks { get; set; }
+
 		private const int _itemsAddedPerThread = 10000;
-		private const int _itemsAddedTotal = _producerThreadCount * _itemsAddedPerThread;
 
-		private readonly BenchmarkCompetition _competition;
-
-		private IAsyncCollection<int> _currentQueue;
-		private Task[] _consumerTasks;
-		private Task[] _producerTasks;
-		private CancellationTokenSource _cancelSource;
-		private int _itemsTaken;
-
-		public AsyncQueueBenchmark()
+		private class Config : ManualConfig
 		{
-			_competition = new BenchmarkCompetition();
-			AddTask( "HellBrick.AsyncCollections.AsyncQueue", () => new AsyncQueue<int>() );
-			AddTask( "Nito.AsyncEx.AsyncCollection", () => new NitoAsyncCollectionAdapter<int>() );
-			AddTask( "System.Concurrent.BlockingCollection", () => new BlockingCollectionAdapter<int>() );
-			AddTask( "System.Threading.Tasks.Dataflow.BufferBlock", () => new TplDataflowAdapter<int>() );
+			public Config()
+			{
+				Add( Job.RyuJitX64.WithLaunchCount( 1 ) );
+			}
 		}
 
-		private void AddTask( string name, Func<IAsyncCollection<int>> factoryMethod )
-		{
-			_competition.AddTask(
-				name,
-				initialize : () => Initialize( factoryMethod ),
-				clean : CleanUp,
-				action : () => DdosCurrentQueue() );
-		}
+		[Benchmark( Description = "HellBrick.AsyncCollections.AsyncQueue" )]
+		public void HellBrickAsyncQueue() => DdosQueue( new AsyncQueue<int>() );
 
-		private void Initialize( Func<IAsyncCollection<int>> factoryMethod )
-		{
-			_currentQueue = factoryMethod();
-			_itemsTaken = 0;
-			_cancelSource = new CancellationTokenSource();
-		}
+		[Benchmark( Description = "Nito.AsyncEx.AsyncCollection" )]
+		public void NitoAsyncCollection() => DdosQueue( new NitoAsyncCollectionAdapter<int>() );
 
-		private void CleanUp()
-		{
-			_currentQueue = null;
-			_consumerTasks = null;
-			_producerTasks = null;
-			_cancelSource = null;
-		}
+		[Benchmark( Description = "System.Concurrent.BlockingCollection" )]
+		public void SystemBlockingCollection() => DdosQueue( new BlockingCollectionAdapter<int>() );
 
-		private void DdosCurrentQueue()
+		[Benchmark( Description = "System.Threading.Tasks.Dataflow.BufferBlock" )]
+		public void DataflowBufferBlock() => DdosQueue( new TplDataflowAdapter<int>() );
+
+		private void DdosQueue( IAsyncCollection<int> queue )
 		{
-			_consumerTasks = Enumerable.Range( 0, _consumerThreadCount )
-				.Select( _ => Task.Run( () => RunConsumerAsync() ) )
+			int itemsAddedTotal = ProducerTasks * _itemsAddedPerThread;
+			IntHolder itemsTakenHolder = new IntHolder() { Value = 0 };
+			CancellationTokenSource consumerCancelSource = new CancellationTokenSource();
+			Task[] consumerTasks = Enumerable.Range( 0, ConsumerTasks )
+				.Select( _ => Task.Run( () => RunConsumerAsync( queue, itemsTakenHolder, itemsAddedTotal, consumerCancelSource ) ) )
 				.ToArray();
 
-			_producerTasks = Enumerable.Range( 0, _producerThreadCount )
-				.Select( _ => Task.Run( () => RunProducer() ) )
+			Task[] producerTasks = Enumerable.Range( 0, ProducerTasks )
+				.Select( _ => Task.Run( () => RunProducer( queue ) ) )
 				.ToArray();
 
-			Task.WaitAll( _producerTasks );
-			Task.WaitAll( _consumerTasks );
+			Task.WaitAll( producerTasks );
+			Task.WaitAll( consumerTasks );
 		}
 
-		private async Task RunConsumerAsync()
+		private static void RunProducer( IAsyncCollection<int> queue )
+		{
+			for ( int i = 0; i < _itemsAddedPerThread; i++ )
+			{
+				int item = 42;
+				queue.Add( item );
+			}
+		}
+
+		private static async Task RunConsumerAsync( IAsyncCollection<int> queue, IntHolder itemsTakeHolder, int itemsAddedTotal, CancellationTokenSource cancelSource )
 		{
 			try
 			{
-				CancellationToken cancelToken = _cancelSource.Token;
+				CancellationToken cancelToken = cancelSource.Token;
 
-				while ( _itemsTaken < _itemsAddedTotal && !cancelToken.IsCancellationRequested )
+				while ( true )
 				{
-					int item = await _currentQueue.TakeAsync( cancelToken ).ConfigureAwait( false );
-					int itemsTakenLocal = Interlocked.Increment( ref _itemsTaken );
+					int item = await queue.TakeAsync( cancelToken ).ConfigureAwait( false );
+					int itemsTakenLocal = Interlocked.Increment( ref itemsTakeHolder.Value );
 
-					if ( itemsTakenLocal >= _itemsAddedTotal )
-					{
-						_cancelSource.Cancel();
-						break;
-					}
+					if ( itemsTakenLocal >= itemsAddedTotal )
+						cancelSource.Cancel();
 				}
 			}
 			catch ( OperationCanceledException )
@@ -94,18 +89,9 @@ namespace HellBrick.AsyncCollections.Benchmark
 			}
 		}
 
-		private void RunProducer()
+		private class IntHolder
 		{
-			for ( int i = 0; i < _itemsAddedPerThread; i++ )
-			{
-				int item = 42;
-				_currentQueue.Add( item );
-			}
-		}
-
-		public void Run()
-		{
-			_competition.Run();
+			public int Value;
 		}
 	}
 }

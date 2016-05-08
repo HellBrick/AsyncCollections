@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Running;
 
 namespace HellBrick.AsyncCollections.Benchmark
 {
@@ -10,8 +11,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 	{
 		private static void Main( string[] args )
 		{
-			var competition = new AsyncQueueBenchmark();
-			competition.Run();
+			BenchmarkRunner.Run<AsyncQueueBenchmark>();
 		}
 	}
 }
