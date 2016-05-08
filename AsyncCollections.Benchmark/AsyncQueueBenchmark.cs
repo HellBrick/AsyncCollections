@@ -9,14 +9,14 @@ using HellBrick.Collections;
 
 namespace HellBrick.AsyncCollections.Benchmark
 {
-	class AsyncQueueBenchmark
+	internal class AsyncQueueBenchmark
 	{
 		private const int _consumerThreadCount = 3;
 		private const int _producerThreadCount = 3;
 		private const int _itemsAddedPerThread = 10000;
 		private const int _itemsAddedTotal = _producerThreadCount * _itemsAddedPerThread;
 
-		private BenchmarkCompetition _competition;
+		private readonly BenchmarkCompetition _competition;
 
 		private IAsyncCollection<int> _currentQueue;
 		private Task[] _consumerTasks;
@@ -79,7 +79,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 
 				while ( _itemsTaken < _itemsAddedTotal && !cancelToken.IsCancellationRequested )
 				{
-					int item = await _currentQueue.TakeAsync( cancelToken );
+					int item = await _currentQueue.TakeAsync( cancelToken ).ConfigureAwait( false );
 					int itemsTakenLocal = Interlocked.Increment( ref _itemsTaken );
 
 					if ( itemsTakenLocal >= _itemsAddedTotal )

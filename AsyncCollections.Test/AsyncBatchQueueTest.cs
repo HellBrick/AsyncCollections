@@ -11,7 +11,7 @@ namespace HellBrick.Collections.Test
 {
 	public class AsyncBatchQueueTest : IDisposable
 	{
-		AsyncBatchQueue<int> _queue;
+		private AsyncBatchQueue<int> _queue;
 
 		public void Dispose() => _queue?.Dispose();
 
@@ -36,7 +36,7 @@ namespace HellBrick.Collections.Test
 			takeTask.IsCompleted.Should().BeFalse();
 
 			_queue.Add( array[ index ] );
-			var batch = await takeTask;
+			var batch = await takeTask.ConfigureAwait( true );
 
 			batch.Should().BeEqualTo( array );
 		}
@@ -51,7 +51,7 @@ namespace HellBrick.Collections.Test
 				_queue.Add( item );
 
 			_queue.Flush();
-			var batch = await _queue.TakeAsync();
+			var batch = await _queue.TakeAsync().ConfigureAwait( true );
 
 			batch.Should().BeEqualTo( array );
 		}
@@ -63,8 +63,8 @@ namespace HellBrick.Collections.Test
 			_queue = new AsyncBatchQueue<int>( 9999, flushPeriod );
 			_queue.Add( 42 );
 
-			await Task.Delay( flushPeriod + flushPeriod );
-			var batch = await _queue.TakeAsync();
+			await Task.Delay( flushPeriod + flushPeriod ).ConfigureAwait( true );
+			var batch = await _queue.TakeAsync().ConfigureAwait( true );
 			batch.Should().BeEqualTo( new[] { 42 } );
 		}
 
@@ -86,12 +86,12 @@ namespace HellBrick.Collections.Test
 						} ) )
 				.ToList();
 
-			await Task.WhenAll( insertTasks );
+			await Task.WhenAll( insertTasks ).ConfigureAwait( true );
 			_queue.Flush();
 
 			int itemsTaken = 0;
 			while ( _queue.Count > 0 )
-				itemsTaken += ( await _queue.TakeAsync() ).Count;
+				itemsTaken += ( await _queue.TakeAsync().ConfigureAwait( true ) ).Count;
 
 			itemsTaken.Should().Be( insertThreads * itemsPerThread );
 		}
@@ -128,10 +128,10 @@ namespace HellBrick.Collections.Test
 					);
 
 					trigger.Set();
-					await addTask;
-					await flushTask;
+					await addTask.ConfigureAwait( true );
+					await flushTask.ConfigureAwait( true );
 
-					IReadOnlyList<int> batch = await _queue.TakeAsync();
+					IReadOnlyList<int> batch = await _queue.TakeAsync().ConfigureAwait( true );
 					List<int> allItems = batch.ToList();
 
 					// This happens if Flush occurred before Add, which means there's another item from Add left unflushed.
@@ -139,7 +139,7 @@ namespace HellBrick.Collections.Test
 					if ( batch.Count < batchSize )
 					{
 						_queue.Flush();
-						IReadOnlyList<int> secondBatch = await _queue.TakeAsync();
+						IReadOnlyList<int> secondBatch = await _queue.TakeAsync().ConfigureAwait( true );
 						allItems.AddRange( secondBatch );
 					}
 

@@ -10,7 +10,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 {
 	class BlockingCollectionAdapter<T>: IAsyncCollection<T>
 	{
-		private BlockingCollection<T> _collection;
+		private readonly BlockingCollection<T> _collection;
 
 		public BlockingCollectionAdapter()
 		{

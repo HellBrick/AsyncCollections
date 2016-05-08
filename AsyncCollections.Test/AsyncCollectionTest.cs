@@ -39,7 +39,7 @@ namespace HellBrick.Collections.Test
 			itemTask.IsCompleted.Should().BeFalse();
 
 			Collection.Add( 42 );
-			( await itemTask ).Should().Be( 42 );
+			( await itemTask.ConfigureAwait( true ) ).Should().Be( 42 );
 		}
 
 		[Fact]
@@ -107,7 +107,7 @@ namespace HellBrick.Collections.Test
 						{
 							while ( itemsTaken < totalItemCount )
 							{
-								int item = await Collection.TakeAsync( cancelSource.Token );
+								int item = await Collection.TakeAsync( cancelSource.Token ).ConfigureAwait( true );
 								int itemsTakenLocal = Interlocked.Increment( ref itemsTaken );
 								if ( itemsTakenLocal == totalItemCount )
 									cancelSource.Cancel();
@@ -144,9 +144,9 @@ namespace HellBrick.Collections.Test
 				producerTasks.Add( producerTask );
 			}
 
-			await Task.WhenAll( producerTasks );
+			await Task.WhenAll( producerTasks ).ConfigureAwait( true );
 
-			await Task.WhenAll( consumerTasks );
+			await Task.WhenAll( consumerTasks ).ConfigureAwait( true );
 			Collection.Count.Should().Be( 0 );
 		}
 	}
