@@ -61,6 +61,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Assertions.cs" />
     <Compile Include="AsyncBatchQueueTest.cs" />
     <Compile Include="AsyncBoundedPriorityQueueTest.cs" />
     <Compile Include="AsyncCollectionTakeFromAnyTest.cs" />
