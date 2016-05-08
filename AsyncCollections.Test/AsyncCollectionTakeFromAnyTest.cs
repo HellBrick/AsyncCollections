@@ -5,80 +5,80 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using HellBrick.Collections;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	[TestClass]
 	public class AsyncCollectionTakeFromAnyTest
 	{
 		private AsyncQueue<int>[] _collections;
 
-		[TestInitialize]
-		public void Initialize()
+		public AsyncCollectionTakeFromAnyTest()
 		{
 			_collections = new AsyncQueue<int>[ 2 ] { new AsyncQueue<int>(), new AsyncQueue<int>() };
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task ReturnsItemFromSecondIfFirstIsEmpty()
 		{
 			_collections[ 1 ].Add( 42 );
 
 			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
-			Assert.AreEqual( 42, result.Value );
-			Assert.AreEqual( 1, result.CollectionIndex );
+			result.Value.Should().Be( 42 );
+			result.CollectionIndex.Should().Be( 1 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task NoUnnecessaryAwaitersAreQueued()
 		{
 			_collections[ 1 ].Add( 42 );
 
 			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
-			Assert.AreEqual( 0, _collections[ 0 ].AwaiterCount );
+			_collections[ 0 ].AwaiterCount.Should().Be( 0 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task RespectsCollectionOrder()
 		{
 			_collections[ 0 ].Add( 42 );
 			_collections[ 1 ].Add( 24 );
 
 			var result = await AsyncCollection<int>.TakeFromAnyAsync( _collections );
-			Assert.AreEqual( 42, result.Value );
-			Assert.AreEqual( 0, result.CollectionIndex );
+			result.Value.Should().Be( 42 );
+			result.CollectionIndex.Should().Be( 0 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task ReturnsItemIfItIsAddedLater()
 		{
 			var task = AsyncCollection<int>.TakeFromAnyAsync( _collections );
-			Assert.IsFalse( task.IsCompleted );
+			task.IsCompleted.Should().BeFalse();
 
 			_collections[ 1 ].Add( 42 );
 			var result = await task;
-			Assert.AreEqual( 42, result.Value );
-			Assert.AreEqual( 1, result.CollectionIndex );
+			result.Value.Should().Be( 42 );
+			result.CollectionIndex.Should().Be( 1 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void CancelsTaskWhenTokenIsCanceled()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
 			var task = AsyncCollection<int>.TakeFromAnyAsync( _collections, cancelSource.Token );
 
 			cancelSource.Cancel();
-			Assert.IsTrue( task.IsCanceled );
+			Func<Task> asyncAct = () => task;
+			asyncAct.ShouldThrow<TaskCanceledException>();
 
 			_collections[ 0 ].Add( 42 );
 			_collections[ 1 ].Add( 64 );
-			Assert.AreEqual( 1, _collections[ 0 ].Count );
-			Assert.AreEqual( 1, _collections[ 1 ].Count );
+			_collections[ 0 ].Count.Should().Be( 1 );
+			_collections[ 1 ].Count.Should().Be( 1 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DoesNothingIfTokenIsCanceledBeforeMethodCall()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
@@ -87,8 +87,8 @@ namespace HellBrick.Collections.Test
 
 			var task = AsyncCollection<int>.TakeFromAnyAsync( _collections, cancelSource.Token );
 
-			Assert.IsTrue( task.IsCanceled );
-			Assert.AreEqual( 1, _collections[ 0 ].Count );
+			task.IsCanceled.Should().BeTrue();
+			_collections[ 0 ].Count.Should().Be( 1 );
 		}
 	}
 }

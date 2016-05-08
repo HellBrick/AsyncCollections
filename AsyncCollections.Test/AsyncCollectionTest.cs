@@ -6,44 +6,43 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using HellBrick.Collections;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	[TestClass]
 	public abstract class AsyncCollectionTest<TAsyncCollection> where TAsyncCollection: IAsyncCollection<int>
 	{
-		protected TAsyncCollection Collection { get; private set; }
+		protected TAsyncCollection Collection { get; }
 
-		[TestInitialize]
-		public void Initialize()
+		protected AsyncCollectionTest()
 		{
 			Collection = CreateCollection();
 		}
 
 		protected abstract TAsyncCollection CreateCollection();
 
-		[TestMethod]
+		[Fact]
 		public void TakingItemFromNonEmptyCollectionCompletesImmediately()
 		{
 			Collection.Add( 42 );
 			var itemTask = Collection.TakeAsync( CancellationToken.None );
-			Assert.IsTrue( itemTask.IsCompleted );
-			Assert.AreEqual( 42, itemTask.Result );
+			itemTask.IsCompleted.Should().BeTrue();
+			itemTask.Result.Should().Be( 42 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task AddingItemCompletesPendingTask()
 		{
 			var itemTask = Collection.TakeAsync( CancellationToken.None );
-			Assert.IsFalse( itemTask.IsCompleted );
+			itemTask.IsCompleted.Should().BeFalse();
 
 			Collection.Add( 42 );
-			Assert.AreEqual( 42, await itemTask );
+			( await itemTask ).Should().Be( 42 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TakeWithCanceledTokenReturnsCanceledTask()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
@@ -51,31 +50,25 @@ namespace HellBrick.Collections.Test
 			Collection.Add( 42 );
 
 			Task<int> itemTask = Collection.TakeAsync( cancelSource.Token );
-			Assert.IsTrue( itemTask.IsCanceled, "The task should have been canceled." );
+			itemTask.IsCanceled.Should().BeTrue( "The task should have been canceled." );
 		}
 
-		[TestMethod]
-		public async Task CancelledTakeCancelsTask()
+		[Fact]
+		public void CancelledTakeCancelsTask()
 		{
 			CancellationTokenSource cancelSource = new CancellationTokenSource();
 			var itemTask = Collection.TakeAsync( cancelSource.Token );
 			cancelSource.Cancel();
 
-			try
-			{
-				await itemTask;
-				Assert.Fail( "Awaiting a canceled task expected to throw an exception" );
-			}
-			catch ( TaskCanceledException )
-			{
-			}
+			Func<Task> asyncAct = () => itemTask;
+			asyncAct.ShouldThrow<TaskCanceledException>();
 
 			Collection.Add( 42 );
-			Assert.AreEqual( 1, Collection.Count );
-			Assert.AreEqual( 0, Collection.AwaiterCount );
+			Collection.Count.Should().Be( 1 );
+			Collection.AwaiterCount.Should().Be( 0 );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ContinuationIsNotInlinedOnAddThread()
 		{
 			Task<int> takeTask = TakeAndReturnContinuationThreadIdAsync();
@@ -83,7 +76,7 @@ namespace HellBrick.Collections.Test
 			Collection.Add( 42 );
 			int continuationThreadID = takeTask.GetAwaiter().GetResult();
 
-			Assert.AreNotEqual( addThreadID, continuationThreadID, "TakeAsync() continuation shouldn't have been inlined on the Add() thread." );
+			addThreadID.Should().NotBe( continuationThreadID, "TakeAsync() continuation shouldn't have been inlined on the Add() thread." );
 		}
 
 		private async Task<int> TakeAndReturnContinuationThreadIdAsync()
@@ -92,8 +85,7 @@ namespace HellBrick.Collections.Test
 			return Thread.CurrentThread.ManagedThreadId;
 		}
 
-		[TestMethod]
-		[Timeout( 30000 )]
+		[Fact]
 		public async Task RandomMultithreadingOperationsDontCrash()
 		{
 			int itemsTaken = 0;
@@ -155,25 +147,17 @@ namespace HellBrick.Collections.Test
 			await Task.WhenAll( producerTasks );
 
 			await Task.WhenAll( consumerTasks );
-			Assert.AreEqual( 0, Collection.Count );
+			Collection.Count.Should().Be( 0 );
 		}
 	}
 
-	[TestClass]
 	public class AsyncQueueTest: AsyncCollectionTest<AsyncQueue<int>>
 	{
-		protected override AsyncQueue<int> CreateCollection()
-		{
-			return new AsyncQueue<int>();
-		}
+		protected override AsyncQueue<int> CreateCollection() => new AsyncQueue<int>();
 	}
 
-	[TestClass]
 	public class AsyncStackTest: AsyncCollectionTest<AsyncStack<int>>
 	{
-		protected override AsyncStack<int> CreateCollection()
-		{
-			return new AsyncStack<int>();
-		}
+		protected override AsyncStack<int> CreateCollection() => new AsyncStack<int>();
 	}
 }
