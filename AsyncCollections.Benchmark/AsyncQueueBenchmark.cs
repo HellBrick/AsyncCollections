@@ -19,8 +19,6 @@ namespace HellBrick.AsyncCollections.Benchmark
 		private readonly BenchmarkCompetition _competition;
 
 		private IAsyncCollection<int> _currentQueue;
-		private Task[] _consumerTasks;
-		private Task[] _producerTasks;
 		private CancellationTokenSource _cancelSource;
 		private int _itemsTaken;
 
@@ -52,23 +50,21 @@ namespace HellBrick.AsyncCollections.Benchmark
 		private void CleanUp()
 		{
 			_currentQueue = null;
-			_consumerTasks = null;
-			_producerTasks = null;
 			_cancelSource = null;
 		}
 
 		private void DdosCurrentQueue()
 		{
-			_consumerTasks = Enumerable.Range( 0, _consumerThreadCount )
+			Task[] consumerTasks = Enumerable.Range( 0, _consumerThreadCount )
 				.Select( _ => Task.Run( () => RunConsumerAsync() ) )
 				.ToArray();
 
-			_producerTasks = Enumerable.Range( 0, _producerThreadCount )
+			Task[] producerTasks = Enumerable.Range( 0, _producerThreadCount )
 				.Select( _ => Task.Run( () => RunProducer() ) )
 				.ToArray();
 
-			Task.WaitAll( _producerTasks );
-			Task.WaitAll( _consumerTasks );
+			Task.WaitAll( producerTasks );
+			Task.WaitAll( consumerTasks );
 		}
 
 		private async Task RunConsumerAsync()
