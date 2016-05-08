@@ -22,10 +22,10 @@ namespace HellBrick.Collections.Test
 		}
 
 		[TestMethod]
-		[ExpectedException( typeof( ArgumentOutOfRangeException ) )]
 		public void ThrowsOnIncorrectBatchSize()
 		{
-			_queue = new AsyncBatchQueue<int>( 0 );
+			Action act = () => _queue = new AsyncBatchQueue<int>( 0 );
+			act.ShouldThrow<ArgumentOutOfRangeException>();
 		}
 
 		[TestMethod]
