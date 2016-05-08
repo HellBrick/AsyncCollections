@@ -19,7 +19,6 @@ namespace HellBrick.AsyncCollections.Benchmark
 		private readonly BenchmarkCompetition _competition;
 
 		private IAsyncCollection<int> _currentQueue;
-		private int _itemsTaken;
 
 		public AsyncQueueBenchmark()
 		{
@@ -42,7 +41,6 @@ namespace HellBrick.AsyncCollections.Benchmark
 		private void Initialize( Func<IAsyncCollection<int>> factoryMethod )
 		{
 			_currentQueue = factoryMethod();
-			_itemsTaken = 0;
 		}
 
 		private void CleanUp()
@@ -52,9 +50,10 @@ namespace HellBrick.AsyncCollections.Benchmark
 
 		private void DdosCurrentQueue()
 		{
+			IntHolder itemsTakenHolder = new IntHolder() { Value = 0 };
 			CancellationTokenSource consumerCancelSource = new CancellationTokenSource();
 			Task[] consumerTasks = Enumerable.Range( 0, _consumerThreadCount )
-				.Select( _ => Task.Run( () => RunConsumerAsync( _currentQueue, consumerCancelSource ) ) )
+				.Select( _ => Task.Run( () => RunConsumerAsync( _currentQueue, itemsTakenHolder, consumerCancelSource ) ) )
 				.ToArray();
 
 			Task[] producerTasks = Enumerable.Range( 0, _producerThreadCount )
@@ -65,7 +64,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 			Task.WaitAll( consumerTasks );
 		}
 
-		private async Task RunConsumerAsync( IAsyncCollection<int> queue, CancellationTokenSource cancelSource )
+		private static async Task RunConsumerAsync( IAsyncCollection<int> queue, IntHolder itemsTakeHolder, CancellationTokenSource cancelSource )
 		{
 			try
 			{
@@ -74,7 +73,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 				while ( true )
 				{
 					int item = await queue.TakeAsync( cancelToken ).ConfigureAwait( false );
-					int itemsTakenLocal = Interlocked.Increment( ref _itemsTaken );
+					int itemsTakenLocal = Interlocked.Increment( ref itemsTakeHolder.Value );
 
 					if ( itemsTakenLocal >= _itemsAddedTotal )
 						cancelSource.Cancel();
@@ -92,6 +91,11 @@ namespace HellBrick.AsyncCollections.Benchmark
 				int item = 42;
 				queue.Add( item );
 			}
+		}
+
+		private class IntHolder
+		{
+			public int Value;
 		}
 
 		public void Run()
