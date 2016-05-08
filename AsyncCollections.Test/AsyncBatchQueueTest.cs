@@ -11,7 +11,7 @@ namespace HellBrick.Collections.Test
 {
 	public class AsyncBatchQueueTest : IDisposable
 	{
-		AsyncBatchQueue<int> _queue;
+		private AsyncBatchQueue<int> _queue;
 
 		public void Dispose() => _queue?.Dispose();
 

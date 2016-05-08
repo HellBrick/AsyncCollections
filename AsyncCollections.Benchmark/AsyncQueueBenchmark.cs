@@ -9,7 +9,7 @@ using HellBrick.Collections;
 
 namespace HellBrick.AsyncCollections.Benchmark
 {
-	class AsyncQueueBenchmark
+	internal class AsyncQueueBenchmark
 	{
 		private const int _consumerThreadCount = 3;
 		private const int _producerThreadCount = 3;
