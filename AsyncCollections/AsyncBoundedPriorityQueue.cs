@@ -91,6 +91,9 @@ namespace HellBrick.Collections
 			Add( item, _priorityResolver( item ) );
 		}
 
+		/// <summary>
+		/// Removes and returns an item with the highest priority from the collection in an asynchronous manner.
+		/// </summary>
 		public Task<PrioritizedItem<T>> TakeAsync() => TakeAsync( CancellationToken.None );
 
 		/// <summary>
