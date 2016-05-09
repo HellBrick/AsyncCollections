@@ -50,19 +50,13 @@ namespace HellBrick.Collections
 		/// Adds an item to the collection at the highest priority.
 		/// </summary>
 		/// <param name="item">The item to add to the collection.</param>
-		public void AddTopPriority( T item )
-		{
-			Add( item, 0 );
-		}
+		public void AddTopPriority( T item ) => Add( item, 0 );
 
 		/// <summary>
 		/// Adds an item to the collection at the lowest priority.
 		/// </summary>
 		/// <param name="item">The item to add to the collection.</param>
-		public void AddLowPriority( T item )
-		{
-			Add( item, PriorityLevels - 1 );
-		}
+		public void AddLowPriority( T item ) => Add( item, PriorityLevels - 1 );
 
 		/// <summary>
 		/// Adds an item to the collection at a specified priority.
@@ -72,12 +66,7 @@ namespace HellBrick.Collections
 		public void Add( T item, int priority )
 		{
 			if ( priority < 0 || priority > PriorityLevels )
-			{
-				throw new ArgumentOutOfRangeException(
-					"priority",
-					priority,
-					String.Format( "Priority can't be less than 0 or bigger than {0}.", PriorityLevels - 1 ) );
-			}
+				throw new ArgumentOutOfRangeException( nameof( priority ), priority, $"Priority can't be less than 0 or bigger than {PriorityLevels - 1}." );
 
 			Add( new PrioritizedItem<T>( item, priority ) );
 		}
@@ -86,10 +75,7 @@ namespace HellBrick.Collections
 		/// Adds an item to the collection at default priority.
 		/// </summary>
 		/// <param name="item">The item to add to the collection.</param>
-		public void Add( T item )
-		{
-			Add( item, _priorityResolver( item ) );
-		}
+		public void Add( T item ) => Add( item, _priorityResolver( item ) );
 
 		/// <summary>
 		/// Removes and returns an item with the highest priority from the collection in an asynchronous manner.
