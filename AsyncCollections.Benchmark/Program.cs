@@ -14,6 +14,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 		private static IEnumerable<Type> EnumerateBenchmarks()
 		{
 			yield return typeof( AsyncQueueBenchmark );
+			yield return typeof( AsyncBatchQueueBenchmark );
 		}
 	}
 }
