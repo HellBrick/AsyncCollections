@@ -82,8 +82,6 @@ namespace HellBrick.Collections
 			Add( new PrioritizedItem<T>( item, priority ) );
 		}
 
-		public Task<PrioritizedItem<T>> TakeAsync() => TakeAsync( CancellationToken.None );
-
 		/// <summary>
 		/// Adds an item to the collection at default priority.
 		/// </summary>
@@ -92,6 +90,8 @@ namespace HellBrick.Collections
 		{
 			Add( item, _priorityResolver( item ) );
 		}
+
+		public Task<PrioritizedItem<T>> TakeAsync() => TakeAsync( CancellationToken.None );
 
 		/// <summary>
 		/// Removes and returns an item with the highest priority from the collection in an asynchronous manner.
