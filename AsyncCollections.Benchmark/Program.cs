@@ -9,9 +9,12 @@ namespace HellBrick.AsyncCollections.Benchmark
 {
 	internal class Program
 	{
-		private static void Main( string[] args )
+		private static void Main( string[] args ) => new BenchmarkSwitcher( EnumerateBenchmarks().ToArray() ).Run();
+
+		private static IEnumerable<Type> EnumerateBenchmarks()
 		{
-			BenchmarkRunner.Run<AsyncQueueBenchmark>();
+			yield return typeof( AsyncQueueBenchmark );
+			yield return typeof( AsyncBatchQueueBenchmark );
 		}
 	}
 }
