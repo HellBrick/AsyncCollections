@@ -17,8 +17,6 @@ namespace HellBrick.Collections
 	{
 		private readonly Func<T, int> _priorityResolver;
 
-		#region Construction
-
 		/// <summary>
 		/// <para>Initializes a new <see cref="AsyncBoundedPriorityQueue{T}"/> instance with a specified number of priority levels.</para>
 		/// <para>The items will be inserted at the lowest priority by default.</para>
@@ -42,10 +40,6 @@ namespace HellBrick.Collections
 			PriorityLevels = priorityLevels;
 			_priorityResolver = priorityResolver;
 		}
-
-		#endregion
-
-		#region Priority-specific
 
 		/// <summary>
 		/// Gets the amount of priority levels the collection supports.
@@ -90,10 +84,6 @@ namespace HellBrick.Collections
 
 		public Task<PrioritizedItem<T>> TakeAsync() => TakeAsync( CancellationToken.None );
 
-		#endregion
-
-		#region IAsyncCollection<T> Members
-
 		/// <summary>
 		/// Adds an item to the collection at default priority.
 		/// </summary>
@@ -112,13 +102,7 @@ namespace HellBrick.Collections
 			return prioritizedItem.Item;
 		}
 
-		#endregion
-
-		#region IEnumerable<T> Members
-
 		IEnumerator<T> IEnumerable<T>.GetEnumerator() => ( this as IEnumerable<PrioritizedItem<T>> ).Select( prioritizedItem => prioritizedItem.Item ).GetEnumerator();
-
-		#endregion
 
 		private class ConcurrentBoundedPriorityQueue : IProducerConsumerCollection<PrioritizedItem<T>>
 		{
