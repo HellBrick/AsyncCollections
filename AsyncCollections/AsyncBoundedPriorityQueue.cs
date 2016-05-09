@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,14 +13,9 @@ namespace HellBrick.Collections
 	/// Represents a thread-safe queue with a bounded number of priority levels.
 	/// </summary>
 	/// <typeparam name="T">The type of the items contained in the queue.</typeparam>
-	public class AsyncBoundedPriorityQueue<T> : IAsyncCollection<T>
+	public class AsyncBoundedPriorityQueue<T> : AsyncCollection<PrioritizedItem<T>>, IAsyncCollection<T>
 	{
 		private readonly Func<T, int> _priorityResolver;
-		private readonly AsyncQueue<T>[] _priorityQueues;
-
-		private int _awaiterCount = 0;
-
-		#region Construction
 
 		/// <summary>
 		/// <para>Initializes a new <see cref="AsyncBoundedPriorityQueue{T}"/> instance with a specified number of priority levels.</para>
@@ -38,51 +35,28 @@ namespace HellBrick.Collections
 		/// Must return an integer between 0 (top priority) and <paramref name="priorityLevels"/> - 1 (low priority).
 		/// </param>
 		public AsyncBoundedPriorityQueue( int priorityLevels, Func<T, int> priorityResolver )
+			: base( new ConcurrentBoundedPriorityQueue( priorityLevels ) )
 		{
-			if ( priorityLevels < 0 || priorityLevels > AsyncCollection<T>.TakeFromAnyMaxCollections )
-			{
-				throw new ArgumentOutOfRangeException(
-					"priorityLevels",
-					priorityLevels,
-					String.Format( "Amount of priority levels can't be less than 0 or bigger than {0}", AsyncCollection<T>.TakeFromAnyMaxCollections ) );
-			}
-
+			PriorityLevels = priorityLevels;
 			_priorityResolver = priorityResolver;
-
-			_priorityQueues = new AsyncQueue<T>[ priorityLevels ];
-			for ( int i = 0; i < priorityLevels; i++ )
-				_priorityQueues[ i ] = new AsyncQueue<T>();
 		}
-
-		#endregion
-
-		#region Priority-specific
 
 		/// <summary>
 		/// Gets the amount of priority levels the collection supports.
 		/// </summary>
-		public int PriorityLevels
-		{
-			get { return _priorityQueues.Length; }
-		}
+		public int PriorityLevels { get; }
 
 		/// <summary>
 		/// Adds an item to the collection at the highest priority.
 		/// </summary>
 		/// <param name="item">The item to add to the collection.</param>
-		public void AddTopPriority( T item )
-		{
-			Add( item, 0 );
-		}
+		public void AddTopPriority( T item ) => Add( item, 0 );
 
 		/// <summary>
 		/// Adds an item to the collection at the lowest priority.
 		/// </summary>
 		/// <param name="item">The item to add to the collection.</param>
-		public void AddLowPriority( T item )
-		{
-			Add( item, _priorityQueues.Length - 1 );
-		}
+		public void AddLowPriority( T item ) => Add( item, PriorityLevels - 1 );
 
 		/// <summary>
 		/// Adds an item to the collection at a specified priority.
@@ -91,98 +65,93 @@ namespace HellBrick.Collections
 		/// <param name="priority">The priority of the item, with 0 being the top priority.</param>
 		public void Add( T item, int priority )
 		{
-			if ( priority < 0 || priority > _priorityQueues.Length )
-			{
-				throw new ArgumentOutOfRangeException(
-					"priority",
-					priority,
-					String.Format( "Priority can't be less than 0 or bigger than {0}.", _priorityQueues.Length - 1 ) );
-			}
+			if ( priority < 0 || priority > PriorityLevels )
+				throw new ArgumentOutOfRangeException( nameof( priority ), priority, $"Priority can't be less than 0 or bigger than {PriorityLevels - 1}." );
 
-			_priorityQueues[ priority ].Add( item );
-		}
-
-		#endregion
-
-		#region IAsyncCollection<T> Members
-
-		/// <summary>
-		/// Gets an amount of pending item requests.
-		/// </summary>
-		public int AwaiterCount
-		{
-			get { return Volatile.Read( ref _awaiterCount ); }
+			Add( new PrioritizedItem<T>( item, priority ) );
 		}
 
 		/// <summary>
 		/// Adds an item to the collection at default priority.
 		/// </summary>
 		/// <param name="item">The item to add to the collection.</param>
-		public void Add( T item )
-		{
-			Add( item, _priorityResolver( item ) );
-		}
+		public void Add( T item ) => Add( item, _priorityResolver( item ) );
 
 		/// <summary>
 		/// Removes and returns an item with the highest priority from the collection in an asynchronous manner.
 		/// </summary>
-		public async Task<T> TakeAsync( System.Threading.CancellationToken cancellationToken )
-		{
-			Interlocked.Increment( ref _awaiterCount );
+		public Task<PrioritizedItem<T>> TakeAsync() => TakeAsync( CancellationToken.None );
 
-			try
+		/// <summary>
+		/// Removes and returns an item with the highest priority from the collection in an asynchronous manner.
+		/// </summary>
+		async Task<T> IAsyncCollection<T>.TakeAsync( System.Threading.CancellationToken cancellationToken )
+		{
+			PrioritizedItem<T> prioritizedItem = await base.TakeAsync( cancellationToken ).ConfigureAwait( false );
+			return prioritizedItem.Item;
+		}
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator() => ( this as IEnumerable<PrioritizedItem<T>> ).Select( prioritizedItem => prioritizedItem.Item ).GetEnumerator();
+
+		private class ConcurrentBoundedPriorityQueue : IProducerConsumerCollection<PrioritizedItem<T>>
+		{
+			private readonly ConcurrentQueue<T>[] _itemQueues;
+
+			public ConcurrentBoundedPriorityQueue( int priorityLevels )
 			{
-				var result = await AsyncCollection<T>.TakeFromAnyAsync( _priorityQueues, cancellationToken ).ConfigureAwait( false );
-				return result.Value;
+				if ( priorityLevels < 0 )
+					throw new ArgumentOutOfRangeException( nameof( priorityLevels ), priorityLevels, "Amount of priority levels can't be less than 0." );
+
+				_itemQueues = Enumerable.Range( 0, priorityLevels ).Select( _ => new ConcurrentQueue<T>() ).ToArray();
 			}
-			finally
+
+			public int Count => _itemQueues.Sum( q => q.Count );
+
+			public bool TryAdd( PrioritizedItem<T> item )
 			{
-				Interlocked.Decrement( ref _awaiterCount );
+				_itemQueues[ item.Priority ].Enqueue( item.Item );
+				return true;
+			}
+
+			public bool TryTake( out PrioritizedItem<T> item )
+			{
+				for ( int priority = 0; priority < _itemQueues.Length; priority++ )
+				{
+					T itemValue;
+					if ( _itemQueues[ priority ].TryDequeue( out itemValue ) )
+					{
+						item = new PrioritizedItem<T>( itemValue, priority );
+						return true;
+					}
+				}
+
+				item = default( PrioritizedItem<T> );
+				return false;
+			}
+
+			public IEnumerator<PrioritizedItem<T>> GetEnumerator()
+				=> _itemQueues
+				.SelectMany( ( queue, index ) => queue.Select( item => new PrioritizedItem<T>( item, index ) ) )
+				.GetEnumerator();
+
+			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+			bool ICollection.IsSynchronized => false;
+			object ICollection.SyncRoot => null;
+
+			void ICollection.CopyTo( Array array, int index )
+			{
+				throw new NotSupportedException();
+			}
+
+			void IProducerConsumerCollection<PrioritizedItem<T>>.CopyTo( PrioritizedItem<T>[] array, int index )
+			{
+				throw new NotSupportedException();
+			}
+
+			PrioritizedItem<T>[] IProducerConsumerCollection<PrioritizedItem<T>>.ToArray()
+			{
+				throw new NotSupportedException();
 			}
 		}
-
-		#endregion
-
-		#region IEnumerable<T> Members
-
-		public IEnumerator<T> GetEnumerator()
-		{
-			return _priorityQueues.SelectMany( q => q ).GetEnumerator();
-		}
-
-		#endregion
-
-		#region IEnumerable Members
-
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return this.GetEnumerator();
-		}
-
-		#endregion
-
-		#region ICollection Members
-
-		void System.Collections.ICollection.CopyTo( Array array, int index )
-		{
-			throw new NotSupportedException();
-		}
-
-		public int Count
-		{
-			get { return _priorityQueues.Sum( q => q.Count ); }
-		}
-
-		bool System.Collections.ICollection.IsSynchronized
-		{
-			get { return false; }
-		}
-
-		object System.Collections.ICollection.SyncRoot
-		{
-			get { throw new NotSupportedException(); }
-		}
-
-		#endregion
 	}
 }
