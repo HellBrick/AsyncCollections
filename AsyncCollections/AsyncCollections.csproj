@@ -70,6 +70,7 @@
     <Compile Include="AsyncCollection.cs" />
     <Compile Include="AsyncQueue.cs" />
     <Compile Include="AsyncStack.cs" />
+    <Compile Include="IAsyncBatchCollection.cs" />
     <Compile Include="IAsyncCollection.cs" />
     <Compile Include="Internal\BitArray32.cs" />
     <Compile Include="Internal\IAwaiterFactory.cs" />
