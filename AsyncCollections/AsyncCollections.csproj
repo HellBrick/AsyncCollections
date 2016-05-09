@@ -79,6 +79,7 @@
     <Compile Include="Internal\ExclusiveCompletionSourceGroup.cs" />
     <Compile Include="Internal\IAwaiter.cs" />
     <Compile Include="Internal\TaskExtensions.cs" />
+    <Compile Include="PrioritizedItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

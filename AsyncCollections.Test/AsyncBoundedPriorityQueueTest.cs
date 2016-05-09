@@ -21,7 +21,7 @@ namespace HellBrick.Collections.Test
 		{
 			Collection.Add( 42, 1 );
 			var result = await Collection.TakeAsync().ConfigureAwait( true );
-			result.Should().Be( 42 );
+			result.Should().Be( new PrioritizedItem<int>( 42, 1 ) );
 		}
 
 		[Fact]
@@ -31,7 +31,7 @@ namespace HellBrick.Collections.Test
 			Collection.Add( 999, 1 );
 
 			var result = await Collection.TakeAsync().ConfigureAwait( true );
-			result.Should().Be( 42 );
+			result.Should().Be( new PrioritizedItem<int>( 42, 0 ) );
 		}
 	}
 }
