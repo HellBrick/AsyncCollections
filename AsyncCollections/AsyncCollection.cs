@@ -27,7 +27,7 @@ namespace HellBrick.Collections
 		/// Initializes a new instance of <see cref="AsyncCollection"/> with a specified <see cref="IProducerConsumerCollection{T}"/> as an underlying item storage.
 		/// </summary>
 		/// <param name="itemQueue">The collection to use as an underlying item storage. MUST NOT be accessed elsewhere.</param>
-		protected AsyncCollection( IProducerConsumerCollection<T> itemQueue )
+		public AsyncCollection( IProducerConsumerCollection<T> itemQueue )
 		{
 			_itemQueue = itemQueue;
 			_queueBalance = _itemQueue.Count;
