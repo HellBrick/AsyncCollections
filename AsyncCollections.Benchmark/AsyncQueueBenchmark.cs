@@ -34,6 +34,9 @@ namespace HellBrick.AsyncCollections.Benchmark
 			}
 		}
 
+		[Benchmark( Description = "AsyncQueue" )]
+		public void HellBrickAsyncQueue() => DdosQueue( new AsyncQueue<int>() );
+
 		[Benchmark( Description = "AsyncCollection( ConcurrentQueue )" )]
 		public void HellBrickAsyncCollection() => DdosQueue( new AsyncCollection<int>( new ConcurrentQueue<int>() ) );
 
