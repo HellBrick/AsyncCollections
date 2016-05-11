@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,11 +14,11 @@ namespace HellBrick.Collections.Test
 {
 	public class AsyncCollectionTakeFromAnyTest
 	{
-		private readonly AsyncQueue<int>[] _collections;
+		private readonly AsyncCollection<int>[] _collections;
 
 		public AsyncCollectionTakeFromAnyTest()
 		{
-			_collections = new AsyncQueue<int>[ 2 ] { new AsyncQueue<int>(), new AsyncQueue<int>() };
+			_collections = new AsyncCollection<int>[ 2 ] { new AsyncCollection<int>( new ConcurrentQueue<int>() ), new AsyncCollection<int>( new ConcurrentQueue<int>() ) };
 		}
 
 		[Fact]
