@@ -13,12 +13,9 @@ namespace HellBrick.Collections
 	/// <typeparam name="T">The type of the items contained in the collection.</typeparam>
 	public class AsyncBatchQueue<T> : IAsyncBatchCollection<T>, IDisposable
 	{
-		private readonly int _batchSize;
 		private volatile Batch _currentBatch;
 		private readonly AsyncQueue<IReadOnlyList<T>> _batchQueue = new AsyncQueue<IReadOnlyList<T>>();
 		private readonly Timer _flushTimer;
-
-		#region Construction
 
 		/// <summary>
 		/// Initializes a new instance of <see cref="AsyncBatchQueue"/> that produces batches of a specified size.
@@ -29,7 +26,7 @@ namespace HellBrick.Collections
 			if ( batchSize <= 0 )
 				throw new ArgumentOutOfRangeException( "batchSize", batchSize, "Batch size must be a positive integer." );
 
-			_batchSize = batchSize;
+			BatchSize = batchSize;
 			_currentBatch = new Batch( this );
 		}
 
@@ -45,25 +42,15 @@ namespace HellBrick.Collections
 			_flushTimer = new Timer( _ => Flush(), null, flushPeriod, flushPeriod );
 		}
 
-		#endregion
-
-		#region Public
-
 		/// <summary>
 		/// Gets amount of items contained in an output batch.
 		/// </summary>
-		public int BatchSize
-		{
-			get { return _batchSize; }
-		}
+		public int BatchSize { get; }
 
 		/// <summary>
 		/// Gets the number of flushed batches currently available for consuming.
 		/// </summary>
-		public int Count
-		{
-			get { return _batchQueue.Count; }
-		}
+		public int Count => _batchQueue.Count;
 
 		/// <summary>
 		/// Adds an item to the collection. Flushes the new batch to be available for consuming if amount of the pending items has reached <see cref="BatchSize"/>.
@@ -80,18 +67,12 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns a batch from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<IReadOnlyList<T>> TakeAsync()
-		{
-			return TakeAsync( CancellationToken.None );
-		}
+		public Task<IReadOnlyList<T>> TakeAsync() => TakeAsync( CancellationToken.None );
 
 		/// <summary>
 		/// Removes and returns a batch from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken )
-		{
-			return _batchQueue.TakeAsync( cancellationToken );
-		}
+		public Task<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken ) => _batchQueue.TakeAsync( cancellationToken );
 
 		/// <summary>
 		/// <para>Forces a new batch to be created and made available for consuming even if amount of the pending items has not reached <see cref="BatchSize"/> yet.</para>
@@ -104,35 +85,10 @@ namespace HellBrick.Collections
 				spin.SpinOnce();
 		}
 
-		#endregion
+		public IEnumerator<IReadOnlyList<T>> GetEnumerator() => _batchQueue.GetEnumerator();
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
-		#region IEnumerable<IReadOnlyList<T>> Members
-
-		public IEnumerator<IReadOnlyList<T>> GetEnumerator()
-		{
-			return _batchQueue.GetEnumerator();
-		}
-
-		#endregion
-
-		#region IEnumerable Members
-
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return this.GetEnumerator();
-		}
-
-		#endregion
-
-		#region IDisposable Members
-
-		public void Dispose()
-		{
-			if ( _flushTimer != null )
-				_flushTimer.Dispose();
-		}
-
-		#endregion
+		public void Dispose() => _flushTimer?.Dispose();
 
 		private class Batch : IReadOnlyList<T>
 		{
@@ -145,8 +101,8 @@ namespace HellBrick.Collections
 			public Batch( AsyncBatchQueue<T> queue )
 			{
 				_queue = queue;
-				_items = new T[ _queue._batchSize ];
-				_finalizationFlags = new bool[ _queue._batchSize ];
+				_items = new T[ _queue.BatchSize ];
+				_finalizationFlags = new bool[ _queue.BatchSize ];
 			}
 
 			public bool TryAdd( T item )
@@ -154,12 +110,12 @@ namespace HellBrick.Collections
 				int index = Interlocked.Increment( ref _lastReservationIndex );
 
 				//	The following is true if someone has beaten us to the last slot and we have to wait until the next batch comes along.
-				if ( index >= _queue._batchSize )
+				if ( index >= _queue.BatchSize )
 					return false;
 
 				//	The following is true if we've taken the last slot, which means we're obligated to flush the current batch and create a new one.
-				if ( index == _queue._batchSize - 1 )
-					FlushInternal( _queue._batchSize );
+				if ( index == _queue.BatchSize - 1 )
+					FlushInternal( _queue.BatchSize );
 
 				//	The full fence prevents setting finalization flag before the actual item value is written.
 				_items[ index ] = item;
@@ -175,10 +131,10 @@ namespace HellBrick.Collections
 
 				//	We don't flush if the batch doesn't have any items or if another thread is about to flush it.
 				//	However, we report success to avoid unnecessary spinning.
-				if ( expectedPreviousReservation < 0 || expectedPreviousReservation >= _queue._batchSize - 1 )
+				if ( expectedPreviousReservation < 0 || expectedPreviousReservation >= _queue.BatchSize - 1 )
 					return true;
 
-				int previousReservation = Interlocked.CompareExchange( ref _lastReservationIndex, _queue._batchSize, expectedPreviousReservation );
+				int previousReservation = Interlocked.CompareExchange( ref _lastReservationIndex, _queue.BatchSize, expectedPreviousReservation );
 
 				//	Flush reservation has succeeded.
 				if ( expectedPreviousReservation == previousReservation )
@@ -190,7 +146,7 @@ namespace HellBrick.Collections
 				//	The following is true if someone has completed the batch by the time we tried to flush it.
 				//	Therefore the batch will be flushed anyway even if we don't do anything.
 				//	The opposite means someone has slipped in an update and we have to spin.
-				return previousReservation >= _queue._batchSize;
+				return previousReservation >= _queue.BatchSize;
 			}
 
 			private void FlushInternal( int count )
@@ -220,8 +176,6 @@ namespace HellBrick.Collections
 				return _items[ index ];
 			}
 
-			#region IReadOnlyList<T> Members
-
 			public T this[ int index ]
 			{
 				get
@@ -233,18 +187,7 @@ namespace HellBrick.Collections
 				}
 			}
 
-			#endregion
-
-			#region IReadOnlyCollection<T> Members
-
-			public int Count
-			{
-				get { return _count; }
-			}
-
-			#endregion
-
-			#region IEnumerable<T> Members
+			public int Count => _count;
 
 			public IEnumerator<T> GetEnumerator()
 			{
@@ -252,16 +195,7 @@ namespace HellBrick.Collections
 					yield return GetItemWithoutValidation( i );
 			}
 
-			#endregion
-
-			#region IEnumerable Members
-
-			System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-			{
-				return this.GetEnumerator();
-			}
-
-			#endregion
+			System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 		}
 	}
 }

@@ -15,19 +15,15 @@ namespace HellBrick.Collections.Internal
 	{
 		private int _completedSource = State.Locked;
 		private readonly TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
-		private readonly Task<AnyResult<T>> _task;
 		private BitArray32 _awaitersCreated = BitArray32.Empty;
 		private CancellationRegistrationHolder _cancellationRegistrationHolder;
 
 		public ExclusiveCompletionSourceGroup()
 		{
-			_task = _realCompetionSource.Task.WithYield();
+			Task = _realCompetionSource.Task.WithYield();
 		}
 
-		public Task<AnyResult<T>> Task
-		{
-			get { return _task; }
-		}
+		public Task<AnyResult<T>> Task { get; }
 
 		public bool IsAwaiterCreated( int index ) => _awaitersCreated.IsBitSet( index );
 		public Factory CreateAwaiterFactory( int index ) => new Factory( this, index );
@@ -38,31 +34,31 @@ namespace HellBrick.Collections.Internal
 			return new ExclusiveCompletionSource( this, index );
 		}
 
-		public void MarkAsResolved()
-		{
-			Interlocked.CompareExchange( ref _completedSource, State.Canceled, State.Unlocked );
-		}
+		public void MarkAsResolved() => Interlocked.CompareExchange( ref _completedSource, State.Canceled, State.Unlocked );
 
 		public void UnlockCompetition( CancellationToken cancellationToken )
 		{
-			CancellationTokenRegistration registration = cancellationToken.Register(
-				state =>
-				{
-					ExclusiveCompletionSourceGroup<T> group = state as ExclusiveCompletionSourceGroup<T>;
+			CancellationTokenRegistration registration = cancellationToken
+				.Register
+				(
+					state =>
+					{
+						ExclusiveCompletionSourceGroup<T> group = state as ExclusiveCompletionSourceGroup<T>;
 
-					/// There are 2 cases here.
-					/// 
-					/// #1: The token is canceled before <see cref="UnlockCompetition(CancellationToken)"/> is called, but after the token is validated higher up the stack.
-					/// Is this is the case, the cancellation callbak will be called synchronously while <see cref="_completedSource"/> is still set to <see cref="State.Locked"/>.
-					/// So the competition will never progress to <see cref="State.Unlocked"/> and we have to check for this explicitly.
-					/// 
-					/// #2: We're canceled after the competition has been unlocked.
-					/// If this is the case, we have a simple race against the awaiters to progress from <see cref="State.Unlocked"/> to <see cref="State.Canceled"/>.
-					if ( group.TryTransitionToCanceledIfStateIs( State.Locked ) || group.TryTransitionToCanceledIfStateIs( State.Unlocked ) )
-						group._realCompetionSource.SetCanceled();
-				},
-				this,
-				useSynchronizationContext: false );
+						/// There are 2 cases here.
+						/// 
+						/// #1: The token is canceled before <see cref="UnlockCompetition(CancellationToken)"/> is called, but after the token is validated higher up the stack.
+						/// Is this is the case, the cancellation callbak will be called synchronously while <see cref="_completedSource"/> is still set to <see cref="State.Locked"/>.
+						/// So the competition will never progress to <see cref="State.Unlocked"/> and we have to check for this explicitly.
+						/// 
+						/// #2: We're canceled after the competition has been unlocked.
+						/// If this is the case, we have a simple race against the awaiters to progress from <see cref="State.Unlocked"/> to <see cref="State.Canceled"/>.
+						if ( group.TryTransitionToCanceledIfStateIs( State.Locked ) || group.TryTransitionToCanceledIfStateIs( State.Unlocked ) )
+							group._realCompetionSource.SetCanceled();
+					},
+					this,
+					useSynchronizationContext: false
+				);
 
 			// We can't do volatile reads/writes on a custom value type field, so we have to wrap the registration into a holder instance.
 			// But there's no point in allocating the wrapper if the token can never be canceled.
@@ -103,8 +99,6 @@ namespace HellBrick.Collections.Internal
 				_id = id;
 			}
 
-			#region IAwaiter<T> Members
-
 			public bool TrySetResult( T result )
 			{
 				SpinWait spin = new SpinWait();
@@ -136,13 +130,8 @@ namespace HellBrick.Collections.Internal
 				}
 			}
 
-			public Task<T> Task
-			{
-				//	The value will never be actually used.
-				get { return null; }
-			}
-
-			#endregion
+			//	The value will never be actually used.
+			public Task<T> Task => null;
 		}
 
 		public struct Factory : IAwaiterFactory<T>, IEquatable<Factory>

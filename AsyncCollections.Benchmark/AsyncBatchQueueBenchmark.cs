@@ -12,7 +12,7 @@ using HellBrick.Collections;
 
 namespace HellBrick.AsyncCollections.Benchmark
 {
-	[Config( typeof( Config ) )]
+	[Config( typeof( BenchmarkConfig ) )]
 	public class AsyncBatchQueueBenchmark
 	{
 		[Params( 1, 3 )]
@@ -24,20 +24,11 @@ namespace HellBrick.AsyncCollections.Benchmark
 		private const int _itemsAddedPerThread = 9999;
 		private const int _batchSize = 32;
 
-		private class Config : ManualConfig
-		{
-			public Config()
-			{
-				Add( Job.RyuJitX64.WithLaunchCount( 1 ) );
-				Add( new MemoryDiagnoser() );
-			}
-		}
-
 		[Benchmark( Description = "HellBrick.AsyncCollections.AsyncBatchQueue" )]
 		public void HellBrickAsyncBatchQueue() => DdosQueue( new AsyncBatchQueue<int>( _batchSize ) );
 
-		[Benchmark( Description = "System.Threading.Tasks.Dataflow.BufferBlock" )]
-		public void DataflowBufferBlock() => DdosQueue( new TplBatchBlockAdapter<int>( _batchSize ) );
+		[Benchmark( Description = "System.Threading.Tasks.Dataflow.BatchBlock" )]
+		public void DataflowBatchBlock() => DdosQueue( new TplBatchBlockAdapter<int>( _batchSize ) );
 
 		private void DdosQueue( IAsyncBatchCollection<int> queue )
 		{

@@ -33,15 +33,12 @@ namespace HellBrick.Collections
 			_queueBalance = _itemQueue.Count;
 		}
 
-		#region IAsyncCollection<T> members
+		public int Count => _itemQueue.Count;
 
 		/// <summary>
 		/// Gets an amount of pending item requests.
 		/// </summary>
-		public int AwaiterCount
-		{
-			get { return _awaiterQueue.Count; }
-		}
+		public int AwaiterCount => _awaiterQueue.Count;
 
 		/// <summary>
 		/// Adds an item to the collection.
@@ -89,12 +86,9 @@ namespace HellBrick.Collections
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
 		public Task<T> TakeAsync( CancellationToken cancellationToken )
-		{
-			if ( cancellationToken.IsCancellationRequested )
-				return CanceledTask<T>.Value;
-
-			return TakeAsync( new CompletionSourceAwaiterFactory<T>( cancellationToken ) );
-		}
+			=> cancellationToken.IsCancellationRequested
+			? CanceledTask<T>.Value
+			: TakeAsync( new CompletionSourceAwaiterFactory<T>( cancellationToken ) );
 
 		private Task<T> TakeAsync<TAwaiterFactory>( TAwaiterFactory awaiterFactory ) where TAwaiterFactory : IAwaiterFactory<T>
 		{
@@ -121,12 +115,10 @@ namespace HellBrick.Collections
 			}
 		}
 
-		public override string ToString()
-		{
-			return String.Format( "Count = {0}, Awaiters = {1}", Count, AwaiterCount );
-		}
+		public override string ToString() => $"Count = {Count}, Awaiters = {AwaiterCount}";
 
-		#endregion
+		public IEnumerator<T> GetEnumerator() => _itemQueue.GetEnumerator();
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => _itemQueue.GetEnumerator();
 
 		#region Static
 
@@ -135,10 +127,7 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
 		/// </summary>
-		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections )
-		{
-			return TakeFromAnyAsync( collections, CancellationToken.None );
-		}
+		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections ) => TakeFromAnyAsync( collections, CancellationToken.None );
 
 		/// <summary>
 		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
@@ -197,33 +186,6 @@ namespace HellBrick.Collections
 			}
 			else
 				return null;
-		}
-
-		#endregion
-
-		#region IEnumerable<T> Members
-
-		public IEnumerator<T> GetEnumerator()
-		{
-			return _itemQueue.GetEnumerator();
-		}
-
-		#endregion
-
-		#region IEnumerable Members
-
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return _itemQueue.GetEnumerator();
-		}
-
-		#endregion
-
-		#region IReadOnlyCollection<T> Members
-
-		public int Count
-		{
-			get { return _itemQueue.Count; }
 		}
 
 		#endregion
