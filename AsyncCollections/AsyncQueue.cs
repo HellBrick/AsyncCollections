@@ -94,24 +94,6 @@ namespace HellBrick.Collections
 		public IEnumerator<T> GetEnumerator() => EnumerateSegments().SelectMany( s => s ).GetEnumerator();
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-		bool ICollection.IsSynchronized => false;
-		object ICollection.SyncRoot => null;
-
-		void ICollection.CopyTo( Array array, int index )
-		{
-			if ( array.Rank != 1 )
-				throw new ArgumentException( $"Can't copy to an array with rank != 1.", nameof( array ) );
-
-			T[] typedArray = (T[]) array;
-			foreach ( T item in this )
-			{
-				if ( index > typedArray.Length )
-					break;
-
-				typedArray[ index++ ] = item;
-			}
-		}
-
 		private class Segment : IEnumerable<T>
 		{
 			private readonly T[] _items = new T[ SegmentSize ];

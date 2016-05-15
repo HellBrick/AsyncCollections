@@ -17,7 +17,7 @@ IAsyncCollection
 Most of collections here implement this interface (I'd say it pretty much describes what this library is all about):
 
 ```C#
-public interface IAsyncCollection<T> : IEnumerable<T>, System.Collections.ICollection
+public interface IAsyncCollection<T> : IReadOnlyCollection<T>
 {
 	void Add( T item );
 	Task<T> TakeAsync( CancellationToken cancellationToken );
