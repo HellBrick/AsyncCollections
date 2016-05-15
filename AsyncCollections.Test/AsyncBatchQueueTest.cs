@@ -60,11 +60,11 @@ namespace HellBrick.Collections.Test
 		public async Task TimerFlushesPendingItems()
 		{
 			TimeSpan flushPeriod = TimeSpan.FromMilliseconds( 500 );
-			_queue = new AsyncBatchQueue<int>( 9999, flushPeriod );
-			_queue.Add( 42 );
+			var timerQueue = new AsyncBatchQueue<int>( 9999 ).WithFlushEvery( flushPeriod );
+			timerQueue.Add( 42 );
 
 			await Task.Delay( flushPeriod + flushPeriod ).ConfigureAwait( true );
-			var batch = await _queue.TakeAsync().ConfigureAwait( true );
+			var batch = await timerQueue.TakeAsync().ConfigureAwait( true );
 			batch.Should().BeEqualTo( new[] { 42 } );
 		}
 
