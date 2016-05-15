@@ -228,14 +228,4 @@ namespace HellBrick.Collections
 
 		#endregion
 	}
-
-	[Obsolete( "AsyncCollection<T> should be used directly instead." )]
-	public class AsyncCollection<TItem, TItemQueue> : AsyncCollection<TItem>
-		where TItemQueue : IProducerConsumerCollection<TItem>, new()
-	{
-		public AsyncCollection()
-			: base( new TItemQueue() )
-		{
-		}
-	}
 }
