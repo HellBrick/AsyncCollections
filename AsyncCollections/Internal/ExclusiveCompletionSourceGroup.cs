@@ -15,19 +15,15 @@ namespace HellBrick.Collections.Internal
 	{
 		private int _completedSource = State.Locked;
 		private readonly TaskCompletionSource<AnyResult<T>> _realCompetionSource = new TaskCompletionSource<AnyResult<T>>();
-		private readonly Task<AnyResult<T>> _task;
 		private BitArray32 _awaitersCreated = BitArray32.Empty;
 		private CancellationRegistrationHolder _cancellationRegistrationHolder;
 
 		public ExclusiveCompletionSourceGroup()
 		{
-			_task = _realCompetionSource.Task.WithYield();
+			Task = _realCompetionSource.Task.WithYield();
 		}
 
-		public Task<AnyResult<T>> Task
-		{
-			get { return _task; }
-		}
+		public Task<AnyResult<T>> Task { get; }
 
 		public bool IsAwaiterCreated( int index ) => _awaitersCreated.IsBitSet( index );
 		public Factory CreateAwaiterFactory( int index ) => new Factory( this, index );
@@ -38,10 +34,7 @@ namespace HellBrick.Collections.Internal
 			return new ExclusiveCompletionSource( this, index );
 		}
 
-		public void MarkAsResolved()
-		{
-			Interlocked.CompareExchange( ref _completedSource, State.Canceled, State.Unlocked );
-		}
+		public void MarkAsResolved() => Interlocked.CompareExchange( ref _completedSource, State.Canceled, State.Unlocked );
 
 		public void UnlockCompetition( CancellationToken cancellationToken )
 		{
@@ -137,11 +130,8 @@ namespace HellBrick.Collections.Internal
 				}
 			}
 
-			public Task<T> Task
-			{
-				//	The value will never be actually used.
-				get { return null; }
-			}
+			//	The value will never be actually used.
+			public Task<T> Task => null;
 		}
 
 		public struct Factory : IAwaiterFactory<T>, IEquatable<Factory>

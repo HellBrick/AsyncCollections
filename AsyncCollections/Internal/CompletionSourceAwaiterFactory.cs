@@ -24,13 +24,12 @@ namespace HellBrick.Collections.Internal
 		private class CompletionSourceAwaiter : IAwaiter<T>
 		{
 			private readonly TaskCompletionSource<T> _completionSource;
-			private readonly Task<T> _task;
 			private readonly CancellationTokenRegistration _registration;
 
 			public CompletionSourceAwaiter( CancellationToken cancellationToken )
 			{
 				_completionSource = new TaskCompletionSource<T>();
-				_task = _completionSource.Task.WithYield();
+				Task = _completionSource.Task.WithYield();
 
 				_registration = cancellationToken.Register(
 					state =>
@@ -48,10 +47,7 @@ namespace HellBrick.Collections.Internal
 				return _completionSource.TrySetResult( result );
 			}
 
-			public Task<T> Task
-			{
-				get { return _task; }
-			}
+			public Task<T> Task { get; }
 		}
 
 		#region IEquatable<CompletionSourceAwaiterFactory<T>>
