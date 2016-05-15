@@ -42,8 +42,6 @@ namespace HellBrick.Collections.Internal
 					useSynchronizationContext: false );
 			}
 
-			#region IAwaiter<T> Members
-
 			public bool TrySetResult( T result )
 			{
 				_registration.Dispose();
@@ -54,8 +52,6 @@ namespace HellBrick.Collections.Internal
 			{
 				get { return _task; }
 			}
-
-			#endregion
 		}
 
 		#region IEquatable<CompletionSourceAwaiterFactory<T>>

@@ -33,8 +33,6 @@ namespace HellBrick.Collections
 			_queueBalance = _itemQueue.Count;
 		}
 
-		#region IAsyncCollection<T> members
-
 		/// <summary>
 		/// Gets an amount of pending item requests.
 		/// </summary>
@@ -126,8 +124,6 @@ namespace HellBrick.Collections
 			return String.Format( "Count = {0}, Awaiters = {1}", Count, AwaiterCount );
 		}
 
-		#endregion
-
 		#region Static
 
 		internal const int TakeFromAnyMaxCollections = BitArray32.BitCapacity;
@@ -201,31 +197,19 @@ namespace HellBrick.Collections
 
 		#endregion
 
-		#region IEnumerable<T> Members
-
 		public IEnumerator<T> GetEnumerator()
 		{
 			return _itemQueue.GetEnumerator();
 		}
-
-		#endregion
-
-		#region IEnumerable Members
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 		{
 			return _itemQueue.GetEnumerator();
 		}
 
-		#endregion
-
-		#region IReadOnlyCollection<T> Members
-
 		public int Count
 		{
 			get { return _itemQueue.Count; }
 		}
-
-		#endregion
 	}
 }

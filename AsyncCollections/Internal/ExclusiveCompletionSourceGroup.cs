@@ -103,8 +103,6 @@ namespace HellBrick.Collections.Internal
 				_id = id;
 			}
 
-			#region IAwaiter<T> Members
-
 			public bool TrySetResult( T result )
 			{
 				SpinWait spin = new SpinWait();
@@ -141,8 +139,6 @@ namespace HellBrick.Collections.Internal
 				//	The value will never be actually used.
 				get { return null; }
 			}
-
-			#endregion
 		}
 
 		public struct Factory : IAwaiterFactory<T>, IEquatable<Factory>

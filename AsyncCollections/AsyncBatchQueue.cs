@@ -18,8 +18,6 @@ namespace HellBrick.Collections
 		private readonly AsyncQueue<IReadOnlyList<T>> _batchQueue = new AsyncQueue<IReadOnlyList<T>>();
 		private readonly Timer _flushTimer;
 
-		#region Construction
-
 		/// <summary>
 		/// Initializes a new instance of <see cref="AsyncBatchQueue"/> that produces batches of a specified size.
 		/// </summary>
@@ -44,10 +42,6 @@ namespace HellBrick.Collections
 		{
 			_flushTimer = new Timer( _ => Flush(), null, flushPeriod, flushPeriod );
 		}
-
-		#endregion
-
-		#region Public
 
 		/// <summary>
 		/// Gets amount of items contained in an output batch.
@@ -104,35 +98,21 @@ namespace HellBrick.Collections
 				spin.SpinOnce();
 		}
 
-		#endregion
-
-		#region IEnumerable<IReadOnlyList<T>> Members
-
 		public IEnumerator<IReadOnlyList<T>> GetEnumerator()
 		{
 			return _batchQueue.GetEnumerator();
 		}
-
-		#endregion
-
-		#region IEnumerable Members
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 		{
 			return this.GetEnumerator();
 		}
 
-		#endregion
-
-		#region IDisposable Members
-
 		public void Dispose()
 		{
 			if ( _flushTimer != null )
 				_flushTimer.Dispose();
 		}
-
-		#endregion
 
 		private class Batch : IReadOnlyList<T>
 		{
@@ -220,8 +200,6 @@ namespace HellBrick.Collections
 				return _items[ index ];
 			}
 
-			#region IReadOnlyList<T> Members
-
 			public T this[ int index ]
 			{
 				get
@@ -233,18 +211,10 @@ namespace HellBrick.Collections
 				}
 			}
 
-			#endregion
-
-			#region IReadOnlyCollection<T> Members
-
 			public int Count
 			{
 				get { return _count; }
 			}
-
-			#endregion
-
-			#region IEnumerable<T> Members
 
 			public IEnumerator<T> GetEnumerator()
 			{
@@ -252,16 +222,10 @@ namespace HellBrick.Collections
 					yield return GetItemWithoutValidation( i );
 			}
 
-			#endregion
-
-			#region IEnumerable Members
-
 			System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 			{
 				return this.GetEnumerator();
 			}
-
-			#endregion
 		}
 	}
 }
