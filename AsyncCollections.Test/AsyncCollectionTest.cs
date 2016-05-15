@@ -12,7 +12,7 @@ using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	public abstract class AsyncCollectionTest<TAsyncCollection> where TAsyncCollection: IAsyncCollection<int>
+	public abstract class AsyncCollectionTest<TAsyncCollection> where TAsyncCollection : IAsyncCollection<int>
 	{
 		protected TAsyncCollection Collection { get; }
 
@@ -135,7 +135,7 @@ namespace HellBrick.Collections.Test
 					{
 						for ( int j = 0; j < itemCount; j++ )
 						{
-							int item = producerID * itemCount + j;	//	some kind of a unique item ID
+							int item = producerID * itemCount + j; //	some kind of a unique item ID
 							Collection.Add( item );
 							Debug.WriteLine( Collection );
 						}
@@ -151,12 +151,12 @@ namespace HellBrick.Collections.Test
 		}
 	}
 
-	public class AsyncQueueTest: AsyncCollectionTest<AsyncQueue<int>>
+	public class AsyncQueueTest : AsyncCollectionTest<AsyncQueue<int>>
 	{
 		protected override AsyncQueue<int> CreateCollection() => new AsyncQueue<int>();
 	}
 
-	public class AsyncStackTest: AsyncCollectionTest<AsyncStack<int>>
+	public class AsyncStackTest : AsyncCollectionTest<AsyncStack<int>>
 	{
 		protected override AsyncStack<int> CreateCollection() => new AsyncStack<int>();
 	}
