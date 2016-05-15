@@ -9,11 +9,9 @@ using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	public class AsyncBatchQueueTest : IDisposable
+	public class AsyncBatchQueueTest
 	{
 		private AsyncBatchQueue<int> _queue;
-
-		public void Dispose() => _queue?.Dispose();
 
 		[Fact]
 		public void ThrowsOnIncorrectBatchSize()
