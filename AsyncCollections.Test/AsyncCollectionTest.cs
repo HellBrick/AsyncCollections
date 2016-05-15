@@ -153,7 +153,49 @@ namespace HellBrick.Collections.Test
 
 	public class AsyncQueueTest : AsyncCollectionTest<AsyncQueue<int>>
 	{
+		private const int _itemsToOverflowSegment = AsyncQueue<int>.SegmentSize + 1;
+
 		protected override AsyncQueue<int> CreateCollection() => new AsyncQueue<int>();
+
+		[Theory]
+		[InlineData( Order.ItemsFirst )]
+		[InlineData( Order.AwaitersFirst )]
+		public async Task EverythingWorksIfSegmentIsFilledByOneKindOfItems( Order insertionOrder )
+		{
+			int[] items = Enumerable.Range( 0, _itemsToOverflowSegment ).ToArray();
+			Task<int>[] tasks = null;
+
+			switch ( insertionOrder )
+			{
+				case Order.ItemsFirst:
+					InsertItems( items );
+					tasks = InsertAwaiters( items );
+					break;
+
+				case Order.AwaitersFirst:
+					tasks = InsertAwaiters( items );
+					InsertItems( items );
+					break;
+			}
+
+			tasks.Should().OnlyContain( t => t.IsCompleted );
+			int[] values = await Task.WhenAll( tasks ).ConfigureAwait( true );
+			values.Should().BeEquivalentTo( items ).And.BeInAscendingOrder();
+		}
+
+		private Task<int>[] InsertAwaiters( int[] items ) => items.Select( _ => Collection.TakeAsync() ).ToArray();
+
+		private void InsertItems( int[] items )
+		{
+			foreach ( int item in items )
+				Collection.Add( item );
+		}
+
+		public enum Order
+		{
+			ItemsFirst,
+			AwaitersFirst
+		}
 	}
 
 	public class AsyncStackTest : AsyncCollectionTest<AsyncStack<int>>
