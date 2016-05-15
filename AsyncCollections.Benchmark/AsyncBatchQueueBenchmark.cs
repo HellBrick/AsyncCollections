@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Diagnostics.Windows;
 using BenchmarkDotNet.Jobs;
 using HellBrick.Collections;
 
@@ -28,6 +29,7 @@ namespace HellBrick.AsyncCollections.Benchmark
 			public Config()
 			{
 				Add( Job.RyuJitX64.WithLaunchCount( 1 ) );
+				Add( new MemoryDiagnoser() );
 			}
 		}
 
