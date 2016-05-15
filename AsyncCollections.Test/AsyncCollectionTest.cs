@@ -69,6 +69,17 @@ namespace HellBrick.Collections.Test
 		}
 
 		[Fact]
+		public void InsertedItemsCanBeEnumerated()
+		{
+			int[] items = Enumerable.Range( 0, 1000 ).ToArray();
+			foreach ( int item in items )
+				Collection.Add( item );
+
+			int[] enumeratedItems = Collection.ToArray();
+			enumeratedItems.Should().BeEquivalentTo( items );
+		}
+
+		[Fact]
 		public void ContinuationIsNotInlinedOnAddThread()
 		{
 			Task<int> takeTask = TakeAndReturnContinuationThreadIdAsync();
