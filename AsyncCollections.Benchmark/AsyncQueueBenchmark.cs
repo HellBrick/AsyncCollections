@@ -14,7 +14,7 @@ using HellBrick.Collections;
 
 namespace HellBrick.AsyncCollections.Benchmark
 {
-	[Config( typeof( Config ) )]
+	[Config( typeof( BenchmarkConfig ) )]
 	public class AsyncQueueBenchmark
 	{
 		[Params( 1, 3 )]
@@ -24,15 +24,6 @@ namespace HellBrick.AsyncCollections.Benchmark
 		public int ProducerTasks { get; set; }
 
 		private const int _itemsAddedPerThread = 10000;
-
-		private class Config : ManualConfig
-		{
-			public Config()
-			{
-				Add( Job.RyuJitX64.WithLaunchCount( 1 ) );
-				Add( new MemoryDiagnoser() );
-			}
-		}
 
 		[Benchmark( Description = "AsyncQueue" )]
 		public void HellBrickAsyncQueue() => DdosQueue( new AsyncQueue<int>() );
