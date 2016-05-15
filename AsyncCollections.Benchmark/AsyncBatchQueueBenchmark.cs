@@ -27,8 +27,8 @@ namespace HellBrick.AsyncCollections.Benchmark
 		[Benchmark( Description = "HellBrick.AsyncCollections.AsyncBatchQueue" )]
 		public void HellBrickAsyncBatchQueue() => DdosQueue( new AsyncBatchQueue<int>( _batchSize ) );
 
-		[Benchmark( Description = "System.Threading.Tasks.Dataflow.BufferBlock" )]
-		public void DataflowBufferBlock() => DdosQueue( new TplBatchBlockAdapter<int>( _batchSize ) );
+		[Benchmark( Description = "System.Threading.Tasks.Dataflow.BatchBlock" )]
+		public void DataflowBatchBlock() => DdosQueue( new TplBatchBlockAdapter<int>( _batchSize ) );
 
 		private void DdosQueue( IAsyncBatchCollection<int> queue )
 		{
