@@ -4,10 +4,9 @@ using System.Threading.Tasks;
 
 namespace HellBrick.Collections
 {
-	public interface IAsyncBatchCollection<T> : IEnumerable<IReadOnlyList<T>>
+	public interface IAsyncBatchCollection<T> : IReadOnlyCollection<IReadOnlyList<T>>
 	{
 		int BatchSize { get; }
-		int Count { get; }
 
 		void Add( T item );
 		void Flush();

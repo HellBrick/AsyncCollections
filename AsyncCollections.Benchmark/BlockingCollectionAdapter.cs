@@ -55,24 +55,9 @@ namespace HellBrick.AsyncCollections.Benchmark
 
 		#endregion
 
-		#region ICollection Members
-
-		public void CopyTo( Array array, int index )
-		{
-			throw new NotImplementedException();
-		}
+		#region IReadOnlyCollection<T> Members
 
 		public int Count
-		{
-			get { throw new NotImplementedException(); }
-		}
-
-		public bool IsSynchronized
-		{
-			get { throw new NotImplementedException(); }
-		}
-
-		public object SyncRoot
 		{
 			get { throw new NotImplementedException(); }
 		}

@@ -219,26 +219,11 @@ namespace HellBrick.Collections
 
 		#endregion
 
-		#region ICollection Members
+		#region IReadOnlyCollection<T> Members
 
 		public int Count
 		{
 			get { return _itemQueue.Count; }
-		}
-
-		public void CopyTo( Array array, int index )
-		{
-			( _itemQueue as System.Collections.ICollection ).CopyTo( array, index );
-		}
-
-		bool System.Collections.ICollection.IsSynchronized
-		{
-			get { return false; }
-		}
-
-		object System.Collections.ICollection.SyncRoot
-		{
-			get { throw new NotSupportedException(); }
 		}
 
 		#endregion
