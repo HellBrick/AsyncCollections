@@ -12,7 +12,7 @@ using Xunit;
 
 namespace HellBrick.Collections.Test
 {
-	public abstract class AsyncCollectionTest<TAsyncCollection> where TAsyncCollection: IAsyncCollection<int>
+	public abstract class AsyncCollectionTest<TAsyncCollection> where TAsyncCollection : IAsyncCollection<int>
 	{
 		protected TAsyncCollection Collection { get; }
 
@@ -66,6 +66,17 @@ namespace HellBrick.Collections.Test
 			Collection.Add( 42 );
 			Collection.Count.Should().Be( 1 );
 			Collection.AwaiterCount.Should().Be( 0 );
+		}
+
+		[Fact]
+		public void InsertedItemsCanBeEnumerated()
+		{
+			int[] items = Enumerable.Range( 0, 1000 ).ToArray();
+			foreach ( int item in items )
+				Collection.Add( item );
+
+			int[] enumeratedItems = Collection.ToArray();
+			enumeratedItems.Should().BeEquivalentTo( items );
 		}
 
 		[Fact]
@@ -135,7 +146,7 @@ namespace HellBrick.Collections.Test
 					{
 						for ( int j = 0; j < itemCount; j++ )
 						{
-							int item = producerID * itemCount + j;	//	some kind of a unique item ID
+							int item = producerID * itemCount + j; //	some kind of a unique item ID
 							Collection.Add( item );
 							Debug.WriteLine( Collection );
 						}
@@ -151,12 +162,54 @@ namespace HellBrick.Collections.Test
 		}
 	}
 
-	public class AsyncQueueTest: AsyncCollectionTest<AsyncQueue<int>>
+	public class AsyncQueueTest : AsyncCollectionTest<AsyncQueue<int>>
 	{
+		private const int _itemsToOverflowSegment = AsyncQueue<int>.SegmentSize + 1;
+
 		protected override AsyncQueue<int> CreateCollection() => new AsyncQueue<int>();
+
+		[Theory]
+		[InlineData( Order.ItemsFirst )]
+		[InlineData( Order.AwaitersFirst )]
+		public async Task EverythingWorksIfSegmentIsFilledByOneKindOfItems( Order insertionOrder )
+		{
+			int[] items = Enumerable.Range( 0, _itemsToOverflowSegment ).ToArray();
+			Task<int>[] tasks = null;
+
+			switch ( insertionOrder )
+			{
+				case Order.ItemsFirst:
+					InsertItems( items );
+					tasks = InsertAwaiters( items );
+					break;
+
+				case Order.AwaitersFirst:
+					tasks = InsertAwaiters( items );
+					InsertItems( items );
+					break;
+			}
+
+			tasks.Should().OnlyContain( t => t.IsCompleted );
+			int[] values = await Task.WhenAll( tasks ).ConfigureAwait( true );
+			values.Should().BeEquivalentTo( items ).And.BeInAscendingOrder();
+		}
+
+		private Task<int>[] InsertAwaiters( int[] items ) => items.Select( _ => Collection.TakeAsync() ).ToArray();
+
+		private void InsertItems( int[] items )
+		{
+			foreach ( int item in items )
+				Collection.Add( item );
+		}
+
+		public enum Order
+		{
+			ItemsFirst,
+			AwaitersFirst
+		}
 	}
 
-	public class AsyncStackTest: AsyncCollectionTest<AsyncStack<int>>
+	public class AsyncStackTest : AsyncCollectionTest<AsyncStack<int>>
 	{
 		protected override AsyncStack<int> CreateCollection() => new AsyncStack<int>();
 	}

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,8 +34,11 @@ namespace HellBrick.AsyncCollections.Benchmark
 			}
 		}
 
-		[Benchmark( Description = "HellBrick.AsyncCollections.AsyncQueue" )]
+		[Benchmark( Description = "AsyncQueue" )]
 		public void HellBrickAsyncQueue() => DdosQueue( new AsyncQueue<int>() );
+
+		[Benchmark( Description = "AsyncCollection( ConcurrentQueue )" )]
+		public void HellBrickAsyncCollection() => DdosQueue( new AsyncCollection<int>( new ConcurrentQueue<int>() ) );
 
 		[Benchmark( Description = "Nito.AsyncEx.AsyncCollection" )]
 		public void NitoAsyncCollection() => DdosQueue( new NitoAsyncCollectionAdapter<int>() );
