@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,5 +17,6 @@ namespace HellBrick.Collections
 	public static class AsyncBatchCollectionExtensions
 	{
 		public static Task<IReadOnlyList<T>> TakeAsync<T>( this IAsyncBatchCollection<T> collection ) => collection.TakeAsync( CancellationToken.None );
+		public static TimerAsyncBatchQueue<T> WithFlushEvery<T>( this IAsyncBatchCollection<T> collection, TimeSpan flushPeriod ) => new TimerAsyncBatchQueue<T>( collection, flushPeriod );
 	}
 }
