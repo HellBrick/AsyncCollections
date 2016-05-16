@@ -134,8 +134,23 @@ namespace HellBrick.Collections
 
 				/// 1. If we have won the slot, the item is considered successfully added.
 				/// 2. Otherwise, it's up to the result of <see cref="IAwaiter{T}.TrySetResult(T)"/>.
-				///    (Awaiter could have been canceled by now, and if it has, we should return false to insert item again into another slot.)
-				return !lostSlot || Volatile.Read( ref _awaiters[ slot ] ).TrySetResult( item );
+				///    Awaiter could have been canceled by now, and if it has, we should return false to insert item again into another slot.
+				///    We also can't blindly read awaiter from the slot, because <see cref="TryTakeAsync(CancellationToken)"/> captures slot *before* filling in the awaiter.
+				///    So we have to spin until it is available.
+				return !lostSlot || SpinUntilAwaiterIsReady( slot ).TrySetResult( item );
+			}
+
+			private IAwaiter<T> SpinUntilAwaiterIsReady( int slot )
+			{
+				SpinWait spin = new SpinWait();
+				while ( true )
+				{
+					IAwaiter<T> awaiter = Volatile.Read( ref _awaiters[ slot ] );
+					if ( awaiter != null )
+						return awaiter;
+
+					spin.SpinOnce();
+				}
 			}
 
 			public Task<T> TryTakeAsync( CancellationToken cancellationToken )
@@ -150,13 +165,14 @@ namespace HellBrick.Collections
 			{
 				IAwaiter<T> awaiter = null;
 
-				// We make an additional state check to avoid allocating an awaiter if we've already lost the slot.
-				bool lostSlot = Volatile.Read( ref _slotStates[ slot ] ) == SlotState.HasItem;
+				/// The order here differs from what <see cref="TryAdd(T)"/> does: we capture the slot *before* inserting an awaiter.
+				/// We do it to avoid allocating an awaiter / registering the cancellation that we're not gonna need in case we lose.
+				/// This means <see cref="TryAdd(T)"/> can see the default awaiter value, but it is easily solved by spinning until the awaiter is assigned.
+				bool lostSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasAwaiter, SlotState.None ) == SlotState.HasItem;
 				if ( !lostSlot )
 				{
 					awaiter = new CompletionSourceAwaiterFactory<T>( cancellationToken ).CreateAwaiter();
 					Volatile.Write( ref _awaiters[ slot ], awaiter );
-					lostSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasAwaiter, SlotState.None ) == SlotState.HasItem;
 				}
 
 				HandleLastSlotCapture( slot, lostSlot, ref _queue._awaiterTail );
