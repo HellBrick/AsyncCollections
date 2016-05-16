@@ -111,12 +111,32 @@ IReadOnlyList<int> batch1 = await queue.TakeAsync();
 IReadOnlyList<int> batch2 = await queue.TakeAsync();
 ```
 
-There's a constructor overload that allows you to specify a time period to wait before the pending items are flushed and a batch is made available for consuming, even if the batch size is not reached yet:
+There's a bunch of scenarios when you might want to make items available for consumption even if the specified batch size is not reached yet. First of all, you can do it manually by calling `Flush`:
 
 ```C#
-AsyncBatchQueue<int> queue = new AsyncBatchQueue<int>( 9999, TimeSpan.FromSeconds( 5 ) );
+AsyncBatchQueue<int> queue = new AsyncBatchQueue<int>( 9999 );
 queue.Add( 42 );
+queue.Flush();
 
-// This will asynchronously return a batch of 1 item in 5 seconds
+// This will return a batch of 1 item.
 IReadOnlyList<int> batch = await queue.TakeAsync();
 ```
+
+Second, there's a typical case to flush pending items when a certain amount of time has passed. You can use a `WithFlushEvery` extension method to achieve this:
+
+```C#
+AsyncBatchQueue<int> queue = new AsyncBatchQueue<int>( 10 );
+
+using ( TimerAsyncBatchQueue<int> timerQueue = queue.WithFlushEvery( TimeSpan.FromSeconds( 5 ) ) )
+{
+	timerQueue.Add( 42 );
+
+	// This will asynchronously return a batch of 1 item in 5 seconds.
+	IReadOnlyList<int> batch = await timerQueue.TakeAsync();
+}
+
+// Disposing the TimerAsyncBatchQueue simply disposes the inner timer.
+// You can continue using the original queue though.
+```
+
+If the queue has no pending items, `Flush` won't do anything, so you don't have to worry about creating a lot of empty batches when doing manual/timer flushing.
