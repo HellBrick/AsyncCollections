@@ -1,18 +1,14 @@
-What is it and why should I care?
-=================================
+# What is it and why should I care?
 
 `AsyncCollections` is a library that contains a bunch of fast lock-free thread-safe producer-consumer collections tailored for asynchronous usage. Think `System.Collections.Concurrent` but fully `async`-ready.
 
-Nuget package
-=============
+# Nuget package
 
 [https://www.nuget.org/packages/AsyncCollections/](https://www.nuget.org/packages/AsyncCollections/)
 
-API
-===
+# API
 
-IAsyncCollection
--------------------
+## IAsyncCollection
 
 Most of collections here implement this interface (I'd say it pretty much describes what this library is all about):
 
@@ -26,8 +22,7 @@ public interface IAsyncCollection<T> : IReadOnlyCollection<T>
 }
 ```
 
-AsyncQueue and AsyncStack
--------------------------
+## AsyncQueue and AsyncStack
 
 These classes provide queue- and stack-based implementations of `IAsyncCollection<T>`.
 
@@ -43,8 +38,7 @@ int first = await stack.TakeAsync(); // 128
 int second = await stack.TaskAsync(); // 64
 ```
 
-AsyncCollection
----------------
+## AsyncCollection
 
 Think `System.Concurrent.BlockingCollection` for `async` usage. `AsyncCollection<T>` wraps anything that implements `IProducerConcumerCollection<T>` and turns it into an `IAsyncCollection<T>`:
 
@@ -71,8 +65,7 @@ int index = result.CollectionIndex;
 int value = result.Value;
 ```
 
-AsyncBoundedPriorityQueue
--------------------------
+## AsyncBoundedPriorityQueue
 
 This is a priority queue with a limited number of priority levels:
 
@@ -92,8 +85,7 @@ while ( true )
 }
 ```
 
-AsyncBatchQueue
----------------
+## AsyncBatchQueue
 
 This one doesn't implement `IAsyncCollection<T>`, because it provides a slightly different experience. Just like `AsyncQueue<T>`, `AsyncBatchQueue<T>` allows you to add items synchronously and retreive them asynchronously, but the difference is you consume them in batches of the specified size:
 
@@ -141,8 +133,7 @@ using ( TimerAsyncBatchQueue<int> timerQueue = queue.WithFlushEvery( TimeSpan.Fr
 
 If the queue has no pending items, `Flush` won't do anything, so you don't have to worry about creating a lot of empty batches when doing manual/timer flushing.
 
-Benchmarks
-==========
+# Benchmarks
 
 The idea behind all the benchmarks is to measure how long it takes to add a fixed amount of items to the collection and them to take them back, using different amount of producer and consumer tasks. The results below were measured by using this configuration:
 
@@ -158,8 +149,7 @@ Type=AsyncQueueBenchmark  Mode=Throughput  Platform=X64
 Jit=RyuJit  LaunchCount=1  
 ```
 
-AsyncQueue benchmark
---------------------
+## AsyncQueue benchmark
 
 There are multiple ways to achieve the functionality of `AsyncQueue`:
 
@@ -198,8 +188,7 @@ There are multiple ways to achieve the functionality of `AsyncQueue`:
 -------------------------------------------- |-------------- |-------------- |---------------- |-------------- |--------- |------ |------ |------------------- |
 ```
 
-AsyncBatchQueue benchmark
--------------------------
+## AsyncBatchQueue benchmark
 
 There are less alternatives to `AsyncBatchQueue` exist in the wild that I know of. As a matter of fact, the only thing I can come up with is `System.Threading.Tasks.Dataflow.BatchBlock`, so here it is:
 
