@@ -180,11 +180,11 @@ namespace HellBrick.Collections.Test
 			{
 				case Order.ItemsFirst:
 					InsertItems( items );
-					tasks = InsertAwaiters( items );
+					tasks = InsertAwaiters( items.Length );
 					break;
 
 				case Order.AwaitersFirst:
-					tasks = InsertAwaiters( items );
+					tasks = InsertAwaiters( items.Length );
 					InsertItems( items );
 					break;
 			}
@@ -194,7 +194,7 @@ namespace HellBrick.Collections.Test
 			values.Should().BeEquivalentTo( items ).And.BeInAscendingOrder();
 		}
 
-		private Task<int>[] InsertAwaiters( int[] items ) => items.Select( _ => Collection.TakeAsync() ).ToArray();
+		private Task<int>[] InsertAwaiters( int awaiterCount ) => Enumerable.Repeat( 0, awaiterCount ).Select( _ => Collection.TakeAsync() ).ToArray();
 
 		private void InsertItems( int[] items )
 		{
