@@ -95,6 +95,9 @@ namespace HellBrick.Collections
 			}
 		}
 
+		public IEnumerator<T> GetEnumerator() => EnumerateSegments().SelectMany( s => s ).GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
 		private IEnumerable<Segment> EnumerateSegments()
 		{
 			Segment current = Volatile.Read( ref _head );
@@ -106,9 +109,6 @@ namespace HellBrick.Collections
 			}
 			while ( current != null );
 		}
-
-		public IEnumerator<T> GetEnumerator() => EnumerateSegments().SelectMany( s => s ).GetEnumerator();
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 		private class Segment : IEnumerable<T>
 		{
