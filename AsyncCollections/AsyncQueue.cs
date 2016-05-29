@@ -33,7 +33,7 @@ namespace HellBrick.Collections
 		/// </summary>
 		public AsyncQueue()
 		{
-			Segment firstSegment = new Segment( this );
+			Segment firstSegment = new Segment( this, 0 );
 			_itemTail = firstSegment;
 			_awaiterTail = firstSegment;
 			_head = firstSegment;
@@ -50,8 +50,24 @@ namespace HellBrick.Collections
 				Add( item );
 		}
 
-		public int AwaiterCount => EnumerateSegments().Sum( s => s.AwaiterCount );
-		public int Count => EnumerateSegments().Sum( s => s.ItemCount );
+		public int AwaiterCount => ComputeCount( Volatile.Read( ref _awaiterTail ), Volatile.Read( ref _itemTail ), s => s.AwaiterCount );
+		public int Count => ComputeCount( Volatile.Read( ref _itemTail ), Volatile.Read( ref _awaiterTail ), s => s.ItemCount );
+
+		private int ComputeCount( Segment myTail, Segment otherTail, Func<Segment, int> countExtractor )
+		{
+			if ( myTail.SegmentID < otherTail.SegmentID )
+				return 0;
+
+			if ( myTail.SegmentID == otherTail.SegmentID )
+				return countExtractor( myTail );
+
+			int count = countExtractor( myTail ) + countExtractor( otherTail );
+			long fullMiddleSegmentCount = myTail.SegmentID - otherTail.SegmentID - 1;
+			if ( fullMiddleSegmentCount > 0 )
+				count += SegmentSize * (int) fullMiddleSegmentCount;
+
+			return count;
+		}
 
 		public void Add( T item )
 		{
@@ -101,18 +117,21 @@ namespace HellBrick.Collections
 			private readonly int[] _slotStates = new int[ SegmentSize ];
 
 			private readonly AsyncQueue<T> _queue;
+			private readonly long _segmentID;
 
 			private int _awaiterIndex = -1;
 			private int _itemIndex = -1;
 			private Segment _next = null;
 
-			public Segment( AsyncQueue<T> queue )
+			public Segment( AsyncQueue<T> queue, long segmentID )
 			{
 				_queue = queue;
+				_segmentID = segmentID;
 			}
 
 			public Segment VolatileNext => Volatile.Read( ref _next );
 
+			public long SegmentID => _segmentID;
 			public int ItemCount => Math.Max( 0, ItemAwaiterBalance );
 			public int AwaiterCount => Math.Max( 0, -ItemAwaiterBalance );
 
@@ -216,7 +235,7 @@ namespace HellBrick.Collections
 
 			private Segment GrowSegment()
 			{
-				Segment newTail = new Segment( _queue );
+				Segment newTail = new Segment( _queue, _segmentID + 1 );
 				Volatile.Write( ref _next, newTail );
 				return newTail;
 			}
