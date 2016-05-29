@@ -50,8 +50,24 @@ namespace HellBrick.Collections
 				Add( item );
 		}
 
-		public int AwaiterCount => EnumerateSegments().Sum( s => s.AwaiterCount );
-		public int Count => EnumerateSegments().Sum( s => s.ItemCount );
+		public int AwaiterCount => ComputeCount( Volatile.Read( ref _awaiterTail ), Volatile.Read( ref _itemTail ), s => s.AwaiterCount );
+		public int Count => ComputeCount( Volatile.Read( ref _itemTail ), Volatile.Read( ref _awaiterTail ), s => s.ItemCount );
+
+		private int ComputeCount( Segment myTail, Segment otherTail, Func<Segment, int> countExtractor )
+		{
+			if ( myTail.SegmentID < otherTail.SegmentID )
+				return 0;
+
+			if ( myTail.SegmentID == otherTail.SegmentID )
+				return countExtractor( myTail );
+
+			int count = countExtractor( myTail ) + countExtractor( otherTail );
+			long fullMiddleSegmentCount = myTail.SegmentID - otherTail.SegmentID - 1;
+			if ( fullMiddleSegmentCount > 0 )
+				count += SegmentSize * (int) fullMiddleSegmentCount;
+
+			return count;
+		}
 
 		public void Add( T item )
 		{
