@@ -169,6 +169,76 @@ namespace HellBrick.Collections.Test
 		protected override AsyncQueue<int> CreateCollection() => new AsyncQueue<int>();
 
 		[Theory]
+		[InlineData( 0, 0 )]
+		[InlineData( 5, 3 )]
+		[InlineData( 3, 5 )]
+		[InlineData( 7, 7 )]
+		[InlineData( AsyncQueue<int>.SegmentSize, 1 )]
+		[InlineData( 1, AsyncQueue<int>.SegmentSize )]
+		[InlineData( _itemsToOverflowSegment, 1 )]
+		[InlineData( 1, _itemsToOverflowSegment )]
+		[InlineData( _itemsToOverflowSegment * 2, 1 )]
+		[InlineData( 1, _itemsToOverflowSegment * 2 )]
+		public void CountsAreCorrect( int itemsInserted, int awaitersInserted )
+		{
+			InsertItems( Enumerable.Range( 0, itemsInserted ).ToArray() );
+			InsertAwaiters( awaitersInserted );
+
+			int itemAwaiterBalance = itemsInserted - awaitersInserted;
+
+			Collection.Count.Should().Be( Math.Max( 0, itemAwaiterBalance ) );
+			Collection.AwaiterCount.Should().Be( Math.Max( 0, -1 * itemAwaiterBalance ) );
+		}
+
+		[Fact]
+		public void CountsAreCorrectIfItemTailLagsBehind()
+		{
+			InsertAwaiters( _itemsToOverflowSegment );
+
+			Collection.Count.Should().Be( 0 );
+			Collection.AwaiterCount.Should().Be( _itemsToOverflowSegment );
+
+			InsertItems( Enumerable.Range( 0, 1 ).ToArray() );
+
+			Collection.Count.Should().Be( 0 );
+			Collection.AwaiterCount.Should().Be( _itemsToOverflowSegment - 1 );
+		}
+
+		[Fact]
+		public void CountsAreCorrectIfAwaiterTailLagsBehind()
+		{
+			InsertItems( Enumerable.Range( 0, _itemsToOverflowSegment ).ToArray() );
+
+			Collection.AwaiterCount.Should().Be( 0 );
+			Collection.Count.Should().Be( _itemsToOverflowSegment );
+
+			InsertAwaiters( 1 );
+
+			Collection.AwaiterCount.Should().Be( 0 );
+			Collection.Count.Should().Be( _itemsToOverflowSegment - 1 );
+		}
+
+		[Fact]
+		public void CountsAreCorrectIfTailsMatch()
+		{
+			InsertAwaiters( _itemsToOverflowSegment + 1 );
+			InsertItems( Enumerable.Range( 0, _itemsToOverflowSegment ).ToArray() );
+
+			Collection.Count.Should().Be( 0 );
+			Collection.AwaiterCount.Should().Be( 1 );
+
+			Collection.Add( 42 );
+
+			Collection.Count.Should().Be( 0 );
+			Collection.AwaiterCount.Should().Be( 0 );
+
+			Collection.Add( 64 );
+
+			Collection.Count.Should().Be( 1 );
+			Collection.AwaiterCount.Should().Be( 0 );
+		}
+
+		[Theory]
 		[InlineData( Order.ItemsFirst )]
 		[InlineData( Order.AwaitersFirst )]
 		public async Task EverythingWorksIfSegmentIsFilledByOneKindOfItems( Order insertionOrder )
