@@ -95,19 +95,63 @@ namespace HellBrick.Collections
 			}
 		}
 
-		public IEnumerator<T> GetEnumerator() => EnumerateSegments().SelectMany( s => s ).GetEnumerator();
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		public Enumerator GetEnumerator() => new Enumerator( this );
 
-		private IEnumerable<Segment> EnumerateSegments()
+		IEnumerator<T> IEnumerable<T>.GetEnumerator() => new BoxedEnumerator<T, Enumerator>( GetEnumerator() );
+		IEnumerator IEnumerable.GetEnumerator() => ( this as IEnumerable<T> ).GetEnumerator();
+
+		public struct Enumerator : IEnumerator<T>
 		{
-			Segment current = Volatile.Read( ref _head );
+			private SelectManyStructEnumererator<Segment, SegmentEnumerator, T, Segment.Enumerator> _innerEnumerator;
 
-			do
+			public Enumerator( AsyncQueue<T> queue )
 			{
-				yield return current;
-				current = current.VolatileNext;
+				_innerEnumerator = new SelectManyStructEnumererator<Segment, SegmentEnumerator, T, Segment.Enumerator>( new SegmentEnumerator( queue ), segment => segment.GetEnumerator() );
 			}
-			while ( current != null );
+
+			public T Current => _innerEnumerator.Current;
+			object IEnumerator.Current => Current;
+
+			public bool MoveNext() => _innerEnumerator.MoveNext();
+			public void Dispose() => _innerEnumerator.Dispose();
+			public void Reset() => _innerEnumerator.Reset();
+		}
+
+		private struct SegmentEnumerator : IEnumerator<Segment>
+		{
+			private readonly AsyncQueue<T> _queue;
+			private bool _readFirstSegment;
+
+			public SegmentEnumerator( AsyncQueue<T> queue )
+			{
+				_queue = queue;
+				Current = default( Segment );
+				_readFirstSegment = false;
+			}
+
+			public Segment Current { get; private set; }
+			object IEnumerator.Current => Current;
+
+			public bool MoveNext()
+			{
+				if ( !_readFirstSegment )
+				{
+					Current = Volatile.Read( ref _queue._head );
+					_readFirstSegment = true;
+					return true;
+				}
+
+				Current = Current.VolatileNext;
+				return Current != null;
+			}
+
+			public void Dispose()
+			{
+			}
+
+			public void Reset()
+			{
+			}
 		}
 
 		private class Segment : IEnumerable<T>
@@ -254,22 +298,6 @@ namespace HellBrick.Collections
 				return newTail;
 			}
 
-			public IEnumerator<T> GetEnumerator()
-			{
-				/// Items in slots 0 .. <see cref="_awaiterIndex"/> are taken by awaiters, so they are no longer considered stored in the queue.
-				int start = SlotReferenceToCount( ref _awaiterIndex );
-
-				/// <see cref="_itemIndex"/> is the last slot an item actually exists at at the moment, so we shouldn't enumerate through the default values that are stored further.
-				int effectiveLength = SlotReferenceToCount( ref _itemIndex );
-
-				for ( int i = start; i < SegmentSize && i < effectiveLength; i++ )
-				{
-					int slotState = SpinUntilStateIsResolvedAndReturnState( i );
-					if ( slotState == SlotState.HasItem )
-						yield return _items[ i ];
-				}
-			}
-
 			private int SpinUntilStateIsResolvedAndReturnState( int slot )
 			{
 				SpinWait spin = new SpinWait();
@@ -286,7 +314,9 @@ namespace HellBrick.Collections
 				return slotState;
 			}
 
-			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+			public Enumerator GetEnumerator() => new Enumerator( this );
+			IEnumerator<T> IEnumerable<T>.GetEnumerator() => new BoxedEnumerator<T, Enumerator>( GetEnumerator() );
+			IEnumerator IEnumerable.GetEnumerator() => ( this as IEnumerable<T> ).GetEnumerator();
 
 			private static class SlotState
 			{
@@ -294,6 +324,56 @@ namespace HellBrick.Collections
 				public const int HasItem = 1;
 				public const int HasAwaiter = 2;
 				public const int Finished = 3;
+			}
+
+			public struct Enumerator : IEnumerator<T>
+			{
+				private readonly Segment _segment;
+				private int _currentSlot;
+				private int _effectiveLength;
+
+				public Enumerator( Segment segment )
+				{
+					_segment = segment;
+					_currentSlot = Int32.MinValue;
+					_effectiveLength = Int32.MinValue;
+					Current = default( T );
+				}
+
+				public T Current { get; private set; }
+				object IEnumerator.Current => Current;
+
+				public bool MoveNext()
+				{
+					if ( _currentSlot == Int32.MinValue )
+					{
+						/// Items in slots 0 .. <see cref="_awaiterIndex"/> are taken by awaiters, so they are no longer considered stored in the queue.
+						_currentSlot = _segment.SlotReferenceToCount( ref _segment._awaiterIndex );
+
+						/// <see cref="_itemIndex"/> is the last slot an item actually exists at at the moment, so we shouldn't enumerate through the default values that are stored further.
+						_effectiveLength = _segment.SlotReferenceToCount( ref _segment._itemIndex );
+					}
+
+					while ( _currentSlot < _effectiveLength )
+					{
+						int slotState = _segment.SpinUntilStateIsResolvedAndReturnState( _currentSlot );
+						Current = _segment._items[ _currentSlot ];
+						_currentSlot++;
+
+						if ( slotState == SlotState.HasItem )
+							return true;
+					}
+
+					return false;
+				}
+
+				public void Dispose()
+				{
+				}
+
+				public void Reset()
+				{
+				}
 			}
 		}
 	}
