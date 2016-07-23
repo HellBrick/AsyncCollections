@@ -100,7 +100,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\HellBrick.Diagnostics.1.5.0.0\analyzers\dotnet\cs\HellBrick.Diagnostics.dll" />
+    <Analyzer Include="..\packages\HellBrick.Diagnostics.1.6.0.0\analyzers\dotnet\cs\HellBrick.Diagnostics.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Target Name="InstallGitLink">
