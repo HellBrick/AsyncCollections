@@ -73,6 +73,7 @@
     <Compile Include="IAsyncBatchCollection.cs" />
     <Compile Include="IAsyncCollection.cs" />
     <Compile Include="Internal\BitArray32.cs" />
+    <Compile Include="Internal\BoxedEnumerator.cs" />
     <Compile Include="Internal\IAwaiterFactory.cs" />
     <Compile Include="Internal\CancelledTask.cs" />
     <Compile Include="Internal\CompletionSourceAwaiterFactory.cs" />
