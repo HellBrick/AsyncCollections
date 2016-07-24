@@ -95,20 +95,64 @@ namespace HellBrick.Collections
 			}
 		}
 
-		private IEnumerable<Segment> EnumerateSegments()
-		{
-			Segment current = Volatile.Read( ref _head );
+		public Enumerator GetEnumerator() => new Enumerator( this );
 
-			do
+		IEnumerator<T> IEnumerable<T>.GetEnumerator() => new BoxedEnumerator<T, Enumerator>( GetEnumerator() );
+		IEnumerator IEnumerable.GetEnumerator() => ( this as IEnumerable<T> ).GetEnumerator();
+
+		public struct Enumerator : IEnumerator<T>
+		{
+			private SelectManyStructEnumererator<Segment, SegmentEnumerator, T, Segment.Enumerator> _innerEnumerator;
+
+			public Enumerator( AsyncQueue<T> queue )
 			{
-				yield return current;
-				current = current.VolatileNext;
+				_innerEnumerator = new SelectManyStructEnumererator<Segment, SegmentEnumerator, T, Segment.Enumerator>( new SegmentEnumerator( queue ), segment => segment.GetEnumerator() );
 			}
-			while ( current != null );
+
+			public T Current => _innerEnumerator.Current;
+			object IEnumerator.Current => Current;
+
+			public bool MoveNext() => _innerEnumerator.MoveNext();
+			public void Dispose() => _innerEnumerator.Dispose();
+			public void Reset() => _innerEnumerator.Reset();
 		}
 
-		public IEnumerator<T> GetEnumerator() => EnumerateSegments().SelectMany( s => s ).GetEnumerator();
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		private struct SegmentEnumerator : IEnumerator<Segment>
+		{
+			private readonly AsyncQueue<T> _queue;
+			private bool _readFirstSegment;
+
+			public SegmentEnumerator( AsyncQueue<T> queue )
+			{
+				_queue = queue;
+				Current = default( Segment );
+				_readFirstSegment = false;
+			}
+
+			public Segment Current { get; private set; }
+			object IEnumerator.Current => Current;
+
+			public bool MoveNext()
+			{
+				if ( !_readFirstSegment )
+				{
+					Current = Volatile.Read( ref _queue._head );
+					_readFirstSegment = true;
+					return true;
+				}
+
+				Current = Current.VolatileNext;
+				return Current != null;
+			}
+
+			public void Dispose()
+			{
+			}
+
+			public void Reset()
+			{
+			}
+		}
 
 		private class Segment : IEnumerable<T>
 		{
@@ -156,7 +200,15 @@ namespace HellBrick.Collections
 				///    Awaiter could have been canceled by now, and if it has, we should return false to insert item again into another slot.
 				///    We also can't blindly read awaiter from the slot, because <see cref="TryTakeAsync(CancellationToken)"/> captures slot *before* filling in the awaiter.
 				///    So we have to spin until it is available.
-				return !lostSlot || SpinUntilAwaiterIsReady( slot ).TrySetResult( item );
+				///    And regardless of the awaiter state, we mark the slot as finished because both item and awaiter have visited it.
+				return !lostSlot || TrySetAwaiterResultAndMarkSlotAsFinished( item, slot );
+			}
+
+			private bool TrySetAwaiterResultAndMarkSlotAsFinished( T item, int slot )
+			{
+				bool success = SpinUntilAwaiterIsReady( slot ).TrySetResult( item );
+				Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
+				return success;
 			}
 
 			private IAwaiter<T> SpinUntilAwaiterIsReady( int slot )
@@ -182,7 +234,7 @@ namespace HellBrick.Collections
 
 			private Task<T> TryTakeWithoutValidationAsync( CancellationToken cancellationToken, int slot )
 			{
-				IAwaiter<T> awaiter = null;
+				Task<T> result;
 
 				/// The order here differs from what <see cref="TryAdd(T)"/> does: we capture the slot *before* inserting an awaiter.
 				/// We do it to avoid allocating an awaiter / registering the cancellation that we're not gonna need in case we lose.
@@ -190,12 +242,18 @@ namespace HellBrick.Collections
 				bool lostSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasAwaiter, SlotState.None ) == SlotState.HasItem;
 				if ( !lostSlot )
 				{
-					awaiter = new CompletionSourceAwaiterFactory<T>( cancellationToken ).CreateAwaiter();
+					IAwaiter<T> awaiter = new CompletionSourceAwaiterFactory<T>( cancellationToken ).CreateAwaiter();
 					Volatile.Write( ref _awaiters[ slot ], awaiter );
+					result = awaiter.Task;
+				}
+				else
+				{
+					result = Task.FromResult( _items[ slot ] );
+					Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
 				}
 
 				HandleLastSlotCapture( slot, lostSlot, ref _queue._awaiterTail );
-				return lostSlot ? Task.FromResult( _items[ slot ] ) : awaiter.Task;
+				return result;
 			}
 
 			/// <remarks>
@@ -240,22 +298,6 @@ namespace HellBrick.Collections
 				return newTail;
 			}
 
-			public IEnumerator<T> GetEnumerator()
-			{
-				/// Items in slots 0 .. <see cref="_awaiterIndex"/> are taken by awaiters, so they are no longer considered stored in the queue.
-				int start = SlotReferenceToCount( ref _awaiterIndex );
-
-				/// <see cref="_itemIndex"/> is the last slot an item actually exists at at the moment, so we shouldn't enumerate through the default values that are stored further.
-				int effectiveLength = SlotReferenceToCount( ref _itemIndex );
-
-				for ( int i = start; i < SegmentSize && i < effectiveLength; i++ )
-				{
-					int slotState = SpinUntilStateIsResolvedAndReturnState( i );
-					if ( slotState == SlotState.HasItem )
-						yield return _items[ i ];
-				}
-			}
-
 			private int SpinUntilStateIsResolvedAndReturnState( int slot )
 			{
 				SpinWait spin = new SpinWait();
@@ -272,13 +314,66 @@ namespace HellBrick.Collections
 				return slotState;
 			}
 
-			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+			public Enumerator GetEnumerator() => new Enumerator( this );
+			IEnumerator<T> IEnumerable<T>.GetEnumerator() => new BoxedEnumerator<T, Enumerator>( GetEnumerator() );
+			IEnumerator IEnumerable.GetEnumerator() => ( this as IEnumerable<T> ).GetEnumerator();
 
 			private static class SlotState
 			{
 				public const int None = 0;
 				public const int HasItem = 1;
 				public const int HasAwaiter = 2;
+				public const int Finished = 3;
+			}
+
+			public struct Enumerator : IEnumerator<T>
+			{
+				private readonly Segment _segment;
+				private int _currentSlot;
+				private int _effectiveLength;
+
+				public Enumerator( Segment segment )
+				{
+					_segment = segment;
+					_currentSlot = Int32.MinValue;
+					_effectiveLength = Int32.MinValue;
+					Current = default( T );
+				}
+
+				public T Current { get; private set; }
+				object IEnumerator.Current => Current;
+
+				public bool MoveNext()
+				{
+					if ( _currentSlot == Int32.MinValue )
+					{
+						/// Items in slots 0 .. <see cref="_awaiterIndex"/> are taken by awaiters, so they are no longer considered stored in the queue.
+						_currentSlot = _segment.SlotReferenceToCount( ref _segment._awaiterIndex );
+
+						/// <see cref="_itemIndex"/> is the last slot an item actually exists at at the moment, so we shouldn't enumerate through the default values that are stored further.
+						_effectiveLength = _segment.SlotReferenceToCount( ref _segment._itemIndex );
+					}
+
+					while ( _currentSlot < _effectiveLength )
+					{
+						int slotState = _segment.SpinUntilStateIsResolvedAndReturnState( _currentSlot );
+						Current = _segment._items[ _currentSlot ];
+						_currentSlot++;
+
+						if ( slotState == SlotState.HasItem )
+							return true;
+					}
+
+					return false;
+				}
+
+				public void Dispose()
+				{
+				}
+
+				public void Reset()
+				{
+				}
 			}
 		}
 	}

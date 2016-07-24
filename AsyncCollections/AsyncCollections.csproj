@@ -73,11 +73,13 @@
     <Compile Include="IAsyncBatchCollection.cs" />
     <Compile Include="IAsyncCollection.cs" />
     <Compile Include="Internal\BitArray32.cs" />
+    <Compile Include="Internal\BoxedEnumerator.cs" />
     <Compile Include="Internal\IAwaiterFactory.cs" />
     <Compile Include="Internal\CancelledTask.cs" />
     <Compile Include="Internal\CompletionSourceAwaiterFactory.cs" />
     <Compile Include="Internal\ExclusiveCompletionSourceGroup.cs" />
     <Compile Include="Internal\IAwaiter.cs" />
+    <Compile Include="Internal\SelectManyStructEnumererator.cs" />
     <Compile Include="Internal\TaskExtensions.cs" />
     <Compile Include="PrioritizedItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
