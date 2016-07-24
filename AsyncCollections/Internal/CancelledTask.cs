@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace HellBrick.Collections.Internal
 {
+	internal static class CanceledValueTask<T>
+	{
+		public static readonly ValueTask<T> Value = new ValueTask<T>( CanceledTask<T>.Value );
+	}
+
 	internal static class CanceledTask<T>
 	{
 		static CanceledTask()

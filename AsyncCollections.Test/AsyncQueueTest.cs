@@ -88,7 +88,7 @@ namespace HellBrick.Collections.Test
 		public async Task EverythingWorksIfSegmentIsFilledByOneKindOfItems( Order insertionOrder )
 		{
 			int[] items = Enumerable.Range( 0, _itemsToOverflowSegment ).ToArray();
-			Task<int>[] tasks = null;
+			ValueTask<int>[] tasks = null;
 
 			switch ( insertionOrder )
 			{
@@ -104,7 +104,7 @@ namespace HellBrick.Collections.Test
 			}
 
 			tasks.Should().OnlyContain( t => t.IsCompleted );
-			int[] values = await Task.WhenAll( tasks ).ConfigureAwait( true );
+			int[] values = await Task.WhenAll( tasks.Select( t => t.AsTask() ) ).ConfigureAwait( true );
 			values.Should().BeEquivalentTo( items ).And.BeInAscendingOrder();
 		}
 
@@ -132,7 +132,7 @@ namespace HellBrick.Collections.Test
 			}
 		}
 
-		private Task<int>[] InsertAwaiters( int awaiterCount ) => Enumerable.Repeat( 0, awaiterCount ).Select( _ => Collection.TakeAsync() ).ToArray();
+		private ValueTask<int>[] InsertAwaiters( int awaiterCount ) => Enumerable.Repeat( 0, awaiterCount ).Select( _ => Collection.TakeAsync() ).ToArray();
 
 		private void InsertItems( params int[] items )
 		{

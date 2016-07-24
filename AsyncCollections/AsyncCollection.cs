@@ -85,12 +85,12 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<T> TakeAsync( CancellationToken cancellationToken )
+		public ValueTask<T> TakeAsync( CancellationToken cancellationToken )
 			=> cancellationToken.IsCancellationRequested
-			? CanceledTask<T>.Value
+			? CanceledValueTask<T>.Value
 			: TakeAsync( new CompletionSourceAwaiterFactory<T>( cancellationToken ) );
 
-		private Task<T> TakeAsync<TAwaiterFactory>( TAwaiterFactory awaiterFactory ) where TAwaiterFactory : IAwaiterFactory<T>
+		private ValueTask<T> TakeAsync<TAwaiterFactory>( TAwaiterFactory awaiterFactory ) where TAwaiterFactory : IAwaiterFactory<T>
 		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
 
@@ -111,7 +111,7 @@ namespace HellBrick.Collections
 				while ( !_itemQueue.TryTake( out item ) )
 					spin.SpinOnce();
 
-				return Task.FromResult( item );
+				return new ValueTask<T>( item );
 			}
 		}
 
@@ -176,7 +176,7 @@ namespace HellBrick.Collections
 			if ( exclusiveSources.IsAwaiterCreated( index ) )
 				return null;
 
-			Task<T> collectionTask = collection.TakeAsync( exclusiveSources.CreateAwaiterFactory( index ) );
+			ValueTask<T> collectionTask = collection.TakeAsync( exclusiveSources.CreateAwaiterFactory( index ) );
 
 			//	One of the collections already had an item and returned it directly
 			if ( collectionTask != null && collectionTask.IsCompleted )

@@ -54,12 +54,12 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns a batch from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<IReadOnlyList<T>> TakeAsync() => TakeAsync( CancellationToken.None );
+		public ValueTask<IReadOnlyList<T>> TakeAsync() => TakeAsync( CancellationToken.None );
 
 		/// <summary>
 		/// Removes and returns a batch from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken ) => _batchQueue.TakeAsync( cancellationToken );
+		public ValueTask<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken ) => _batchQueue.TakeAsync( cancellationToken );
 
 		/// <summary>
 		/// <para>Forces a new batch to be created and made available for consuming even if amount of the pending items has not reached <see cref="BatchSize"/> yet.</para>

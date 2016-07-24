@@ -22,7 +22,7 @@ namespace HellBrick.Collections
 		public int BatchSize => _innerCollection.BatchSize;
 		public int Count => _innerCollection.Count;
 		public void Add( T item ) => _innerCollection.Add( item );
-		public Task<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken ) => _innerCollection.TakeAsync( cancellationToken );
+		public ValueTask<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken ) => _innerCollection.TakeAsync( cancellationToken );
 		public void Flush() => _innerCollection.Flush();
 		public IEnumerator<IReadOnlyList<T>> GetEnumerator() => _innerCollection.GetEnumerator();
 		IEnumerator IEnumerable.GetEnumerator() => ( _innerCollection as IEnumerable ).GetEnumerator();

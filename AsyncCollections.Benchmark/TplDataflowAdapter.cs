@@ -21,9 +21,9 @@ namespace HellBrick.AsyncCollections.Benchmark
 			buffer.Post( item );
 		}
 
-		public Task<T> TakeAsync( CancellationToken cancellationToken )
+		public ValueTask<T> TakeAsync( CancellationToken cancellationToken )
 		{
-			return buffer.ReceiveAsync( cancellationToken );
+			return new ValueTask<T>( buffer.ReceiveAsync( cancellationToken ) );
 		}
 
 		public IEnumerator<T> GetEnumerator()

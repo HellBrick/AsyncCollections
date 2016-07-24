@@ -83,20 +83,20 @@ namespace HellBrick.Collections
 				spin.SpinOnce();
 		}
 
-		public Task<T> TakeAsync( CancellationToken cancellationToken )
+		public ValueTask<T> TakeAsync( CancellationToken cancellationToken )
 			=> cancellationToken.IsCancellationRequested
-			? CanceledTask<T>.Value
+			? CanceledValueTask<T>.Value
 			: TakeWithoutValidationAsync( cancellationToken );
 
-		private Task<T> TakeWithoutValidationAsync( CancellationToken cancellationToken )
+		private ValueTask<T> TakeWithoutValidationAsync( CancellationToken cancellationToken )
 		{
 			SpinWait spin = new SpinWait();
 
 			while ( true )
 			{
-				Task<T> result = Volatile.Read( ref _awaiterTail ).TryTakeAsync( cancellationToken );
+				ValueTask<T>? result = Volatile.Read( ref _awaiterTail ).TryTakeAsync( cancellationToken );
 				if ( result != null )
-					return result;
+					return result.Value;
 
 				spin.SpinOnce();
 			}
@@ -260,17 +260,17 @@ namespace HellBrick.Collections
 				}
 			}
 
-			public Task<T> TryTakeAsync( CancellationToken cancellationToken )
+			public ValueTask<T>? TryTakeAsync( CancellationToken cancellationToken )
 				=> TryTakeAsync( cancellationToken, Interlocked.Increment( ref _awaiterIndex ) );
 
-			private Task<T> TryTakeAsync( CancellationToken cancellationToken, int slot )
+			private ValueTask<T>? TryTakeAsync( CancellationToken cancellationToken, int slot )
 				=> slot < SegmentSize
 				? TryTakeWithoutValidationAsync( cancellationToken, slot )
-				: null;
+				: (ValueTask<T>?) null;
 
-			private Task<T> TryTakeWithoutValidationAsync( CancellationToken cancellationToken, int slot )
+			private ValueTask<T> TryTakeWithoutValidationAsync( CancellationToken cancellationToken, int slot )
 			{
-				Task<T> result;
+				ValueTask<T> result;
 
 				/// The order here differs from what <see cref="TryAdd(T)"/> does: we capture the slot *before* inserting an awaiter.
 				/// We do it to avoid allocating an awaiter / registering the cancellation that we're not gonna need in case we lose.
@@ -284,7 +284,7 @@ namespace HellBrick.Collections
 				}
 				else
 				{
-					result = Task.FromResult( _items[ slot ] );
+					result = new ValueTask<T>( _items[ slot ] );
 					ClearSlot( slot );
 				}
 

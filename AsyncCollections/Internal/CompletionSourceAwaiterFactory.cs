@@ -29,7 +29,7 @@ namespace HellBrick.Collections.Internal
 			public CompletionSourceAwaiter( CancellationToken cancellationToken )
 			{
 				_completionSource = new TaskCompletionSource<T>();
-				Task = _completionSource.Task.WithYield();
+				Task = new ValueTask<T>( _completionSource.Task.WithYield() );
 
 				_registration = cancellationToken.Register(
 					state =>
@@ -47,7 +47,7 @@ namespace HellBrick.Collections.Internal
 				return _completionSource.TrySetResult( result );
 			}
 
-			public Task<T> Task { get; }
+			public ValueTask<T> Task { get; }
 		}
 
 		#region IEquatable<CompletionSourceAwaiterFactory<T>>

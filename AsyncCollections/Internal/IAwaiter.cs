@@ -20,6 +20,6 @@ namespace HellBrick.Collections.Internal
 		/// <summary>
 		/// The task that's completed when the awaiter gets the result.
 		/// </summary>
-		Task<T> Task { get; }
+		ValueTask<T> Task { get; }
 	}
 }

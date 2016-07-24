@@ -49,7 +49,7 @@ namespace HellBrick.Collections.Test
 			cancelSource.Cancel();
 			Collection.Add( 42 );
 
-			Task<int> itemTask = Collection.TakeAsync( cancelSource.Token );
+			ValueTask<int> itemTask = Collection.TakeAsync( cancelSource.Token );
 			itemTask.IsCanceled.Should().BeTrue( "The task should have been canceled." );
 		}
 
@@ -60,7 +60,7 @@ namespace HellBrick.Collections.Test
 			var itemTask = Collection.TakeAsync( cancelSource.Token );
 			cancelSource.Cancel();
 
-			Func<Task> asyncAct = () => itemTask;
+			Func<Task> asyncAct = async () => await itemTask;
 			asyncAct.ShouldThrow<TaskCanceledException>();
 
 			Collection.Add( 42 );
