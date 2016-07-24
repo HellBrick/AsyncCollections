@@ -182,7 +182,7 @@ namespace HellBrick.Collections
 
 			private Task<T> TryTakeWithoutValidationAsync( CancellationToken cancellationToken, int slot )
 			{
-				IAwaiter<T> awaiter = null;
+				Task<T> result;
 
 				/// The order here differs from what <see cref="TryAdd(T)"/> does: we capture the slot *before* inserting an awaiter.
 				/// We do it to avoid allocating an awaiter / registering the cancellation that we're not gonna need in case we lose.
@@ -190,12 +190,17 @@ namespace HellBrick.Collections
 				bool lostSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasAwaiter, SlotState.None ) == SlotState.HasItem;
 				if ( !lostSlot )
 				{
-					awaiter = new CompletionSourceAwaiterFactory<T>( cancellationToken ).CreateAwaiter();
+					IAwaiter<T> awaiter = new CompletionSourceAwaiterFactory<T>( cancellationToken ).CreateAwaiter();
 					Volatile.Write( ref _awaiters[ slot ], awaiter );
+					result = awaiter.Task;
+				}
+				else
+				{
+					result = Task.FromResult( _items[ slot ] );
 				}
 
 				HandleLastSlotCapture( slot, lostSlot, ref _queue._awaiterTail );
-				return lostSlot ? Task.FromResult( _items[ slot ] ) : awaiter.Task;
+				return result;
 			}
 
 			/// <remarks>
