@@ -277,14 +277,16 @@ namespace HellBrick.Collections
 			/// <param name="tailReference">Either <see cref="AsyncQueue{T}._itemTail"/> or <see cref="AsyncQueue{T}._awaiterTail"/>, whichever we're working on right now.</param>
 			private void HandleLastSlotCapture( int slot, bool wonSlot, ref Segment tailReference )
 			{
-				if ( IsLastSlot( slot ) )
-				{
-					Segment nextSegment = wonSlot ? GrowSegment() : SpinUntilNextSegmentIsReady();
-					Volatile.Write( ref tailReference, nextSegment );
+				if ( !IsLastSlot( slot ) )
+					return;
 
-					if ( !wonSlot )
-						Volatile.Write( ref _queue._head, nextSegment );
-				}
+				Segment nextSegment = wonSlot ? GrowSegment() : SpinUntilNextSegmentIsReady();
+				Volatile.Write( ref tailReference, nextSegment );
+
+				if ( wonSlot )
+					return;
+
+				Volatile.Write( ref _queue._head, nextSegment );
 			}
 
 			private static bool IsLastSlot( int slot ) => slot == SegmentSize - 1;
