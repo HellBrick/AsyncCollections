@@ -259,6 +259,8 @@ namespace HellBrick.Collections
 			private void ClearSlot( int slot )
 			{
 				Volatile.Write( ref _slotStates[ slot ], SlotState.Cleared );
+				Volatile.Write( ref _awaiters[ slot ], null );
+				_items[ slot ] = default( T );
 			}
 
 			/// <remarks>
