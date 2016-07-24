@@ -110,7 +110,7 @@ namespace HellBrick.Collections.Test
 
 		private Task<int>[] InsertAwaiters( int awaiterCount ) => Enumerable.Repeat( 0, awaiterCount ).Select( _ => Collection.TakeAsync() ).ToArray();
 
-		private void InsertItems( int[] items )
+		private void InsertItems( params int[] items )
 		{
 			foreach ( int item in items )
 				Collection.Add( item );
