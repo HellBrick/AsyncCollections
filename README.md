@@ -162,29 +162,29 @@ There are multiple ways to achieve the functionality of `AsyncQueue`:
 ```
                                       Method | ConsumerTasks | ProducerTasks |          Median |        StdDev |    Gen 0 | Gen 1 | Gen 2 | Bytes Allocated/Op |
 -------------------------------------------- |-------------- |-------------- |---------------- |-------------- |--------- |------ |------ |------------------- |
-                                  AsyncQueue |             1 |             1 |     667.1741 us |     8.1260 us |    32,18 |     - |     - |         489 714,62 |
-          AsyncCollection( ConcurrentQueue ) |             1 |             1 |   1,003.4241 us |     4.8941 us |    23,91 |  0,20 |     - |         337 561,10 |
-                Nito.AsyncEx.AsyncCollection |             1 |             1 |  63,391.2878 us |   140.8527 us |   572,53 |  0,97 |     - |       7 461 726,56 |
-        System.Concurrent.BlockingCollection |             1 |             1 |   2,167.5751 us |     5.4851 us |    19,07 |     - |     - |         250 087,18 |
- System.Threading.Tasks.Dataflow.BufferBlock |             1 |             1 |   1,550.5462 us |     3.5019 us |    19,48 |  0,09 |     - |         263 424,62 |
+                                  AsyncQueue |             1 |             1 |     914.6110 us |     4.6121 us |     3,73 |  0,39 |     - |          57 889,00 |
+          AsyncCollection( ConcurrentQueue ) |             1 |             1 |     969.8161 us |     4.2769 us |     2,37 |     - |     - |          31 965,97 |
+                Nito.AsyncEx.AsyncCollection |             1 |             1 |  67,751.7260 us |   104.9323 us |   580,78 |  0,98 |     - |       7 446 934,72 |
+        System.Concurrent.BlockingCollection |             1 |             1 |   2,108.3728 us |    17.0404 us |     2,25 |     - |     - |          35 318,88 |
+ System.Threading.Tasks.Dataflow.BufferBlock |             1 |             1 |   1,673.1337 us |     7.6434 us |    19,88 |     - |     - |         263 489,31 |
 -------------------------------------------- |-------------- |-------------- |---------------- |-------------- |--------- |------ |------ |------------------- |
-                                  AsyncQueue |             1 |             3 |   2,028.5381 us |    11.8484 us |    52,13 |  0,53 |     - |         715 022,97 |
-          AsyncCollection( ConcurrentQueue ) |             1 |             3 |   3,187.5168 us |    36.9967 us |    82,03 |  2,80 |     - |       1 205 906,60 |
-                Nito.AsyncEx.AsyncCollection |             1 |             3 |  84,958.9944 us | 3,457.0669 us |   542,00 | 29,00 |     - |       8 058 962,10 |
-        System.Concurrent.BlockingCollection |             1 |             3 |   6,481.9880 us |     8.3425 us |    67,57 | 14,53 |     - |       1 245 211,75 |
- System.Threading.Tasks.Dataflow.BufferBlock |             1 |             3 |   3,319.2262 us |    27.6294 us |    77,70 |     - |     - |       1 036 270,57 |
+                                  AsyncQueue |             1 |             3 |   2,527.1599 us |     8.7526 us |     3,16 |  1,13 |     - |          71 401,25 |
+          AsyncCollection( ConcurrentQueue ) |             1 |             3 |   2,904.8245 us |    14.8086 us |     5,02 |  0,94 |     - |          91 164,24 |
+                Nito.AsyncEx.AsyncCollection |             1 |             3 |  82,357.5946 us | 2,624.8432 us |   704,33 | 36,10 |     - |      10 253 908,07 |
+        System.Concurrent.BlockingCollection |             1 |             3 |   6,337.2439 us |    64.5049 us |     4,56 |     - |     - |          78 099,77 |
+ System.Threading.Tasks.Dataflow.BufferBlock |             1 |             3 |   3,738.7718 us |    48.2398 us |    90,86 |     - |     - |       1 192 165,45 |
 -------------------------------------------- |-------------- |-------------- |---------------- |-------------- |--------- |------ |------ |------------------- |
-                                  AsyncQueue |             3 |             1 |   1,326.0813 us |    23.8702 us |    26,95 |  1,92 |  0,09 |         514 707,98 |
-          AsyncCollection( ConcurrentQueue ) |             3 |             1 |   4,991.7558 us |   454.3432 us |    93,60 |  3,75 |  0,67 |       1 591 833,55 |
-                Nito.AsyncEx.AsyncCollection |             3 |             1 |  67,086.5496 us |   207.4014 us |   585,24 |  0,94 |     - |       7 631 964,76 |
-        System.Concurrent.BlockingCollection |             3 |             1 |   2,516.6972 us |    19.7043 us |    21,62 |  0,03 |     - |         325 639,16 |
- System.Threading.Tasks.Dataflow.BufferBlock |             3 |             1 |   1,555.7353 us |     6.4511 us |    25,97 |  0,12 |     - |         375 659,42 |
+                                  AsyncQueue |             3 |             1 |   1,393.2974 us |    89.1313 us |     5,84 |  0,90 |     - |         100 325,39 |
+          AsyncCollection( ConcurrentQueue ) |             3 |             1 |   5,931.3962 us |   655.4277 us |    98,69 |  6,88 |  1,18 |       1 662 971,75 |
+                Nito.AsyncEx.AsyncCollection |             3 |             1 |  66,368.2408 us |    83.2923 us |   559,00 |  1,00 |     - |       7 175 669,84 |
+        System.Concurrent.BlockingCollection |             3 |             1 |   2,506.8905 us |    15.4637 us |     2,09 |     - |     - |          29 234,91 |
+ System.Threading.Tasks.Dataflow.BufferBlock |             3 |             1 |   1,680.4107 us |    13.3545 us |    19,07 |     - |     - |         273 553,48 |
 -------------------------------------------- |-------------- |-------------- |---------------- |-------------- |--------- |------ |------ |------------------- |
-                                  AsyncQueue |             3 |             3 |   2,218.7625 us |    48.0594 us |    51,16 |  2,18 |     - |         795 974,79 |
-          AsyncCollection( ConcurrentQueue ) |             3 |             3 |   3,627.3078 us |    61.3965 us |    77,70 |  2,71 |     - |       1 304 593,66 |
-                Nito.AsyncEx.AsyncCollection |             3 |             3 | 261,696.1702 us | 2,249.4580 us | 1 324,63 |  0,98 |     - |      17 586 437,62 |
-        System.Concurrent.BlockingCollection |             3 |             3 |   7,049.6346 us |   158.8700 us |    53,18 |  5,65 |     - |         948 178,60 |
- System.Threading.Tasks.Dataflow.BufferBlock |             3 |             3 |   3,437.2353 us |    99.1422 us |    84,20 |     - |     - |       1 164 906,10 |
+                                  AsyncQueue |             3 |             3 |   2,673.4342 us |    18.6929 us |     4,28 |  1,17 |     - |          89 555,79 |
+          AsyncCollection( ConcurrentQueue ) |             3 |             3 |   3,304.1851 us |    40.6244 us |     6,69 |  0,37 |     - |         113 443,76 |
+                Nito.AsyncEx.AsyncCollection |             3 |             3 | 249,474.1560 us | 1,340.5204 us | 1 275,00 |  1,00 |     - |      16 685 767,14 |
+        System.Concurrent.BlockingCollection |             3 |             3 |   6,826.4026 us |    99.6510 us |     4,37 |     - |     - |          80 584,81 |
+ System.Threading.Tasks.Dataflow.BufferBlock |             3 |             3 |   3,901.0241 us |    55.7299 us |    90,86 |     - |     - |       1 243 432,93 |
 -------------------------------------------- |-------------- |-------------- |---------------- |-------------- |--------- |------ |------ |------------------- |
 ```
 
