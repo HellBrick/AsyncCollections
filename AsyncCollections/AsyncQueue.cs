@@ -207,7 +207,7 @@ namespace HellBrick.Collections
 			private bool TrySetAwaiterResultAndMarkSlotAsFinished( T item, int slot )
 			{
 				bool success = SpinUntilAwaiterIsReady( slot ).TrySetResult( item );
-				Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
+				ClearSlot( slot );
 				return success;
 			}
 
@@ -249,11 +249,16 @@ namespace HellBrick.Collections
 				else
 				{
 					result = Task.FromResult( _items[ slot ] );
-					Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
+					ClearSlot( slot );
 				}
 
 				HandleLastSlotCapture( slot, wonSlot, ref _queue._awaiterTail );
 				return result;
+			}
+
+			private void ClearSlot( int slot )
+			{
+				Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
 			}
 
 			/// <remarks>
