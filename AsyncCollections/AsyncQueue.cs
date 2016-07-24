@@ -258,7 +258,7 @@ namespace HellBrick.Collections
 
 			private void ClearSlot( int slot )
 			{
-				Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
+				Volatile.Write( ref _slotStates[ slot ], SlotState.Cleared );
 			}
 
 			/// <remarks>
@@ -328,7 +328,7 @@ namespace HellBrick.Collections
 				public const int None = 0;
 				public const int HasItem = 1;
 				public const int HasAwaiter = 2;
-				public const int Finished = 3;
+				public const int Cleared = 3;
 			}
 
 			public struct Enumerator : IEnumerator<T>
