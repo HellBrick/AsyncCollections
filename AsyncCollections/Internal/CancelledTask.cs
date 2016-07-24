@@ -8,18 +8,13 @@ namespace HellBrick.Collections.Internal
 {
 	internal static class CanceledValueTask<T>
 	{
-		public static readonly ValueTask<T> Value = new ValueTask<T>( CanceledTask<T>.Value );
-	}
+		public static readonly ValueTask<T> Value = CreateCanceledTask();
 
-	internal static class CanceledTask<T>
-	{
-		static CanceledTask()
+		private static ValueTask<T> CreateCanceledTask()
 		{
 			TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
 			tcs.SetCanceled();
-			Value = tcs.Task;
+			return new ValueTask<T>( tcs.Task );
 		}
-
-		public static readonly Task<T> Value;
 	}
 }
