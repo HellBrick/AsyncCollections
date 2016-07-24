@@ -28,9 +28,9 @@ namespace HellBrick.AsyncCollections.Benchmark
 			_collection.Add( item );
 		}
 
-		public Task<T> TakeAsync( System.Threading.CancellationToken cancellationToken )
+		public ValueTask<T> TakeAsync( System.Threading.CancellationToken cancellationToken )
 		{
-			return _collection.TakeAsync( cancellationToken );
+			return new ValueTask<T>( _collection.TakeAsync( cancellationToken ) );
 		}
 
 		#endregion

@@ -80,15 +80,21 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item with the highest priority from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<PrioritizedItem<T>> TakeAsync() => TakeAsync( CancellationToken.None );
+		public ValueTask<PrioritizedItem<T>> TakeAsync() => TakeAsync( CancellationToken.None );
 
 		/// <summary>
 		/// Removes and returns an item with the highest priority from the collection in an asynchronous manner.
 		/// </summary>
-		async Task<T> IAsyncCollection<T>.TakeAsync( System.Threading.CancellationToken cancellationToken )
+		ValueTask<T> IAsyncCollection<T>.TakeAsync( System.Threading.CancellationToken cancellationToken )
 		{
-			PrioritizedItem<T> prioritizedItem = await base.TakeAsync( cancellationToken ).ConfigureAwait( false );
-			return prioritizedItem.Item;
+			ValueTask<PrioritizedItem<T>> prioritizedItemTask = TakeAsync( cancellationToken );
+			return prioritizedItemTask.IsCompletedSuccessfully ? new ValueTask<T>( prioritizedItemTask.Result.Item ) : new ValueTask<T>( UnwrapAsync( prioritizedItemTask ) );
+		}
+
+		private async Task<T> UnwrapAsync( ValueTask<PrioritizedItem<T>> prioritizedItemTask )
+		{
+			PrioritizedItem<T> result = await prioritizedItemTask.ConfigureAwait( false );
+			return result.Item;
 		}
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator() => ( this as IEnumerable<PrioritizedItem<T>> ).Select( prioritizedItem => prioritizedItem.Item ).GetEnumerator();

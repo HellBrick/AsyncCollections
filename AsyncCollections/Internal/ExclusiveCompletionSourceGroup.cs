@@ -90,6 +90,7 @@ namespace HellBrick.Collections.Internal
 
 		private class ExclusiveCompletionSource : IAwaiter<T>
 		{
+			private static readonly ValueTask<T> _neverEndingTask = new ValueTask<T>( new TaskCompletionSource<T>().Task );
 			private readonly ExclusiveCompletionSourceGroup<T> _group;
 			private readonly int _id;
 
@@ -131,7 +132,7 @@ namespace HellBrick.Collections.Internal
 			}
 
 			//	The value will never be actually used.
-			public Task<T> Task => null;
+			public ValueTask<T> Task => _neverEndingTask;
 		}
 
 		public struct Factory : IAwaiterFactory<T>, IEquatable<Factory>

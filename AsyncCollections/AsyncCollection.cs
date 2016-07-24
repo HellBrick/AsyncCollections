@@ -85,12 +85,12 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public Task<T> TakeAsync( CancellationToken cancellationToken )
+		public ValueTask<T> TakeAsync( CancellationToken cancellationToken )
 			=> cancellationToken.IsCancellationRequested
-			? CanceledTask<T>.Value
+			? CanceledValueTask<T>.Value
 			: TakeAsync( new CompletionSourceAwaiterFactory<T>( cancellationToken ) );
 
-		private Task<T> TakeAsync<TAwaiterFactory>( TAwaiterFactory awaiterFactory ) where TAwaiterFactory : IAwaiterFactory<T>
+		private ValueTask<T> TakeAsync<TAwaiterFactory>( TAwaiterFactory awaiterFactory ) where TAwaiterFactory : IAwaiterFactory<T>
 		{
 			long balanceAfterCurrentAwaiter = Interlocked.Decrement( ref _queueBalance );
 
@@ -111,7 +111,7 @@ namespace HellBrick.Collections
 				while ( !_itemQueue.TryTake( out item ) )
 					spin.SpinOnce();
 
-				return Task.FromResult( item );
+				return new ValueTask<T>( item );
 			}
 		}
 
@@ -127,12 +127,12 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
 		/// </summary>
-		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections ) => TakeFromAnyAsync( collections, CancellationToken.None );
+		public static ValueTask<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections ) => TakeFromAnyAsync( collections, CancellationToken.None );
 
 		/// <summary>
 		/// Removes and returns an item from one of the specified collections in an asynchronous manner.
 		/// </summary>
-		public static Task<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
+		public static ValueTask<AnyResult<T>> TakeFromAnyAsync( AsyncCollection<T>[] collections, CancellationToken cancellationToken )
 		{
 			if ( collections == null )
 				throw new ArgumentNullException( "collections" );
@@ -141,7 +141,7 @@ namespace HellBrick.Collections
 				throw new ArgumentException( String.Format( "The collection array can't contain less than 1 or more than {0} collections.", TakeFromAnyMaxCollections ), "collections" );
 
 			if ( cancellationToken.IsCancellationRequested )
-				return CanceledTask<AnyResult<T>>.Value;
+				return CanceledValueTask<AnyResult<T>>.Value;
 
 			ExclusiveCompletionSourceGroup<T> exclusiveSources = new ExclusiveCompletionSourceGroup<T>();
 
@@ -153,7 +153,7 @@ namespace HellBrick.Collections
 				{
 					AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
 					if ( result.HasValue )
-						return Task.FromResult( result.Value );
+						return new ValueTask<AnyResult<T>>( result.Value );
 				}
 			}
 
@@ -162,12 +162,12 @@ namespace HellBrick.Collections
 			{
 				AnyResult<T>? result = TryTakeFast( exclusiveSources, collections[ i ], i );
 				if ( result.HasValue )
-					return Task.FromResult( result.Value );
+					return new ValueTask<AnyResult<T>>( result.Value );
 			}
 
 			//	None of the collections had any items. The order doesn't matter anymore, it's time to start the competition.
 			exclusiveSources.UnlockCompetition( cancellationToken );
-			return exclusiveSources.Task;
+			return new ValueTask<AnyResult<T>>( exclusiveSources.Task );
 		}
 
 		private static AnyResult<T>? TryTakeFast( ExclusiveCompletionSourceGroup<T> exclusiveSources, AsyncCollection<T> collection, int index )
@@ -176,7 +176,7 @@ namespace HellBrick.Collections
 			if ( exclusiveSources.IsAwaiterCreated( index ) )
 				return null;
 
-			Task<T> collectionTask = collection.TakeAsync( exclusiveSources.CreateAwaiterFactory( index ) );
+			ValueTask<T> collectionTask = collection.TakeAsync( exclusiveSources.CreateAwaiterFactory( index ) );
 
 			//	One of the collections already had an item and returned it directly
 			if ( collectionTask != null && collectionTask.IsCompleted )

@@ -70,7 +70,7 @@ namespace HellBrick.Collections.Test
 			var task = AsyncCollection<int>.TakeFromAnyAsync( _collections, cancelSource.Token );
 
 			cancelSource.Cancel();
-			Func<Task> asyncAct = () => task;
+			Func<Task> asyncAct = async () => await task;
 			asyncAct.ShouldThrow<TaskCanceledException>();
 
 			_collections[ 0 ].Add( 42 );

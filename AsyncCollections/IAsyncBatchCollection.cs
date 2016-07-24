@@ -11,12 +11,12 @@ namespace HellBrick.Collections
 
 		void Add( T item );
 		void Flush();
-		Task<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken );
+		ValueTask<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken );
 	}
 
 	public static class AsyncBatchCollectionExtensions
 	{
-		public static Task<IReadOnlyList<T>> TakeAsync<T>( this IAsyncBatchCollection<T> collection ) => collection.TakeAsync( CancellationToken.None );
+		public static ValueTask<IReadOnlyList<T>> TakeAsync<T>( this IAsyncBatchCollection<T> collection ) => collection.TakeAsync( CancellationToken.None );
 		public static TimerAsyncBatchQueue<T> WithFlushEvery<T>( this IAsyncBatchCollection<T> collection, TimeSpan flushPeriod ) => new TimerAsyncBatchQueue<T>( collection, flushPeriod );
 	}
 }

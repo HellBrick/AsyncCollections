@@ -25,7 +25,7 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		Task<T> TakeAsync( CancellationToken cancellationToken );
+		ValueTask<T> TakeAsync( CancellationToken cancellationToken );
 	}
 
 	public static class AsyncCollectionExtensions
@@ -33,7 +33,7 @@ namespace HellBrick.Collections
 		/// <summary>
 		/// Removes and returns an item from the collection in an asynchronous manner.
 		/// </summary>
-		public static Task<T> TakeAsync<T>( this IAsyncCollection<T> collection )
+		public static ValueTask<T> TakeAsync<T>( this IAsyncCollection<T> collection )
 		{
 			return collection.TakeAsync( CancellationToken.None );
 		}

@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace HellBrick.Collections.Internal
 {
-	internal static class CanceledTask<T>
+	internal static class CanceledValueTask<T>
 	{
-		static CanceledTask()
+		public static readonly ValueTask<T> Value = CreateCanceledTask();
+
+		private static ValueTask<T> CreateCanceledTask()
 		{
 			TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
 			tcs.SetCanceled();
-			Value = tcs.Task;
+			return new ValueTask<T>( tcs.Task );
 		}
-
-		public static readonly Task<T> Value;
 	}
 }

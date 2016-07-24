@@ -23,7 +23,8 @@ namespace HellBrick.AsyncCollections.Benchmark
 		public int Count => _batchBlock.OutputCount;
 
 		public void Add( T item ) => _batchBlock.Post( item );
-		public async Task<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken ) => await _batchBlock.ReceiveAsync( cancellationToken );
+		public ValueTask<IReadOnlyList<T>> TakeAsync( CancellationToken cancellationToken ) => new ValueTask<IReadOnlyList<T>>( RecieveAsync( cancellationToken ) );
+		private async Task<IReadOnlyList<T>> RecieveAsync( CancellationToken cancellationToken ) => await _batchBlock.ReceiveAsync( cancellationToken ).ConfigureAwait( false );
 		public void Flush() => _batchBlock.TriggerBatch();
 
 		public IEnumerator<IReadOnlyList<T>> GetEnumerator()
