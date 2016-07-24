@@ -197,16 +197,16 @@ There are less alternatives to `AsyncBatchQueue` exist in the wild that I know o
 ```
                                      Method | ConsumerTasks | ProducerTasks |        Median |     StdDev |  Gen 0 | Gen 1 | Gen 2 | Bytes Allocated/Op |
 ------------------------------------------- |-------------- |-------------- |-------------- |----------- |------- |------ |------ |------------------- |
-                            AsyncBatchQueue |             1 |             1 |   596.4135 us |  2.5802 us | 168,31 |  9,45 |     - |          74 545,44 |
- System.Threading.Tasks.Dataflow.BatchBlock |             1 |             1 |   898.6758 us |  2.0544 us | 204,51 |     - |     - |          86 408,56 |
+ HellBrick.AsyncCollections.AsyncBatchQueue |             1 |             1 |   581.7463 us |  3.2790 us | 125,68 |  4,50 |     - |          77 281,41 |
+ System.Threading.Tasks.Dataflow.BatchBlock |             1 |             1 |   891.3451 us |  1.4635 us | 150,34 |     - |     - |          91 860,30 |
 ------------------------------------------- |-------------- |-------------- |-------------- |----------- |------- |------ |------ |------------------- |
-                            AsyncBatchQueue |             1 |             3 | 1,917.7758 us | 18.4080 us | 239,00 | 64,00 |  2,00 |         158 864,18 |
- System.Threading.Tasks.Dataflow.BatchBlock |             1 |             3 | 2,455.5698 us | 85.2168 us | 519,75 |     - |     - |         215 718,12 |
+ HellBrick.AsyncCollections.AsyncBatchQueue |             1 |             3 | 1,891.6112 us | 10.6826 us | 278,83 | 12,86 |     - |         178 598,12 |
+ System.Threading.Tasks.Dataflow.BatchBlock |             1 |             3 | 2,437.1000 us |  4.6214 us | 381,67 |     - |     - |         230 144,44 |
 ------------------------------------------- |-------------- |-------------- |-------------- |----------- |------- |------ |------ |------------------- |
-                            AsyncBatchQueue |             3 |             1 |   891.2680 us |  8.9186 us | 219,30 | 12,22 |     - |         108 489,50 |
- System.Threading.Tasks.Dataflow.BatchBlock |             3 |             1 |   906.1295 us |  3.7556 us | 267,00 |     - |     - |         120 142,84 |
+ HellBrick.AsyncCollections.AsyncBatchQueue |             3 |             1 |   891.6061 us |  2.7588 us | 145,75 |  6,90 |     - |          98 127,34 |
+ System.Threading.Tasks.Dataflow.BatchBlock |             3 |             1 |   900.5719 us |  5.4585 us | 173,48 |     - |     - |         110 865,66 |
 ------------------------------------------- |-------------- |-------------- |-------------- |----------- |------- |------ |------ |------------------- |
-                            AsyncBatchQueue |             3 |             3 | 2,170.9173 us | 16.3702 us | 373,78 | 93,68 | 13,91 |         266 014,53 |
- System.Threading.Tasks.Dataflow.BatchBlock |             3 |             3 | 2,455.8641 us | 17.9906 us | 525,57 |     - |     - |         223 575,37 |
+ HellBrick.AsyncCollections.AsyncBatchQueue |             3 |             3 | 2,126.5695 us | 19.0822 us | 485,00 | 18,00 |     - |         316 228,75 |
+ System.Threading.Tasks.Dataflow.BatchBlock |             3 |             3 | 2,470.9311 us | 19.1620 us | 395,91 |     - |     - |         242 047,11 |
 ------------------------------------------- |-------------- |-------------- |-------------- |----------- |------- |------ |------ |------------------- |
 ```
