@@ -33,6 +33,8 @@ namespace HellBrick.Collections
 		/// </summary>
 		private int _enumerationPoolingBalance = 0;
 
+		private Segment _segmentPoolHead = null;
+
 		/// <summary>
 		/// Initializes a new empty instance of <see cref="AsyncQueue{T}"/>.
 		/// </summary>
@@ -193,6 +195,8 @@ namespace HellBrick.Collections
 			private int _itemIndex = -1;
 			private Segment _next = null;
 
+			private Segment _nextPooledSegment = null;
+
 			public Segment( AsyncQueue<T> queue )
 			{
 				_queue = queue;
@@ -305,6 +309,7 @@ namespace HellBrick.Collections
 			/// 4. If we've lost the last slot, it means we're done with the current segment: all items and all awaiters have annihilated each other.
 			///    <see cref="Count"/> and <see cref="AwaiterCount"/> are 0 now, so the segment can't contribute to <see cref="AsyncQueue{T}.Count"/> or <see cref="AsyncQueue{T}.Count"/>.
 			///    So we lose the reference to it by advancing <see cref="AsyncQueue{T}._head"/>.
+			/// 5. If we've lost the last slot, we pool it to be reused later.
 			/// </remarks>
 			/// <param name="tailReference">Either <see cref="AsyncQueue{T}._itemTail"/> or <see cref="AsyncQueue{T}._awaiterTail"/>, whichever we're working on right now.</param>
 			private void HandleLastSlotCapture( int slot, bool wonSlot, ref Segment tailReference )
@@ -319,6 +324,102 @@ namespace HellBrick.Collections
 					return;
 
 				Volatile.Write( ref _queue._head, nextSegment );
+				TryPoolSegment();
+			}
+
+			private void TryPoolSegment()
+			{
+				if ( !TryDecreaseBalance() )
+					return;
+
+				/// We reset <see cref="_next"/> so it could be GC-ed if it doesn't make it to the pool.
+				/// It's safe to do so because:
+				/// 1. <see cref="TryDecreaseBalance"/> guarantees that the whole queue is not being enumerated right now.
+				/// 2. By this time <see cref="_head"/> is already rewritten so future enumerators can't possibly reference the current segment.
+				/// The rest of the clean-up is *NOT* safe to do here, see <see cref="ResetAfterTakingFromPool"/> for details.
+				Volatile.Write( ref _next, null );
+				PushToPool();
+				Interlocked.Increment( ref _queue._enumerationPoolingBalance );
+			}
+
+			private bool TryDecreaseBalance()
+			{
+				SpinWait spin = new SpinWait();
+				while ( true )
+				{
+					int enumeratorPoolBalance = Volatile.Read( ref _queue._enumerationPoolingBalance );
+
+					// If the balance is positive, we have some active enumerators and it's dangerous to pool the segment right now.
+					// We can't spin until the balance is restored either, because we have no guarantee that enumerators will be disposed soon (or will be disposed at all).
+					// So we have no choice but to give up on pooling the segment.
+					if ( enumeratorPoolBalance > 0 )
+						return false;
+
+					if ( Interlocked.CompareExchange( ref _queue._enumerationPoolingBalance, enumeratorPoolBalance - 1, enumeratorPoolBalance ) == enumeratorPoolBalance )
+						return true;
+
+					spin.SpinOnce();
+				}
+			}
+
+			private void PushToPool()
+			{
+				SpinWait spin = new SpinWait();
+				while ( true )
+				{
+					Segment oldHead = Volatile.Read( ref _queue._segmentPoolHead );
+					Volatile.Write( ref _nextPooledSegment, oldHead );
+
+					if ( Interlocked.CompareExchange( ref _queue._segmentPoolHead, this, oldHead ) == oldHead )
+						break;
+
+					spin.SpinOnce();
+				}
+			}
+
+			private Segment TryPopSegmentFromPool()
+			{
+				SpinWait spin = new SpinWait();
+				while ( true )
+				{
+					Segment oldHead = Volatile.Read( ref _queue._segmentPoolHead );
+					if ( oldHead == null )
+						return null;
+
+					if ( Interlocked.CompareExchange( ref _queue._segmentPoolHead, oldHead._nextPooledSegment, oldHead ) == oldHead )
+					{
+						Volatile.Write( ref oldHead._nextPooledSegment, null );
+						return oldHead;
+					}
+
+					spin.SpinOnce();
+				}
+			}
+
+			/// <remarks>
+			/// It's possible for the appenders to read the tail reference before it's updated and to try appending to the segment while it's being pooled.
+			/// There's no cheap way to prevent it, so we have to be prepared that an append can succeed as fast as we reset <see cref="_itemIndex"/> or <see cref="_awaiterIndex"/>.
+			/// This means this method must *NOT* be called on putting the segment into the pool, because it could lead to items/awaiters being stored somewhere in the pool.
+			/// Since there's no guarantee that the segment will ever be reused, this effectively means losing data (or, in the best-case scenario, completely screwing up the item order).
+			/// We prevent this disaster by calling this method on taking segment from the pool, instead of putting it there.
+			/// This way even if such append happens, we're about the reattach the segment to the queue and the data won't be lost.
+			/// </remarks>
+			private Segment ResetAfterTakingFromPool()
+			{
+				/// We must reset <see cref="_slotStates"/> before <see cref="_awaiterIndex"/> and <see cref="_itemIndex"/>.
+				/// Otherwise appenders could successfully increment a pointer and mess with the slots before they are ready to be messed with.
+				for ( int i = 0; i < SegmentSize; i++ )
+				{
+					/// We can't simply overwrite the state, because it's possible that the slot loser has not finished <see cref="ClearSlot(int)"/> yet.
+					SpinWait spin = new SpinWait();
+					while ( Interlocked.CompareExchange( ref _slotStates[ i ], SlotState.None, SlotState.Cleared ) != SlotState.Cleared )
+						spin.SpinOnce();
+				}
+
+				Volatile.Write( ref _awaiterIndex, -1 );
+				Volatile.Write( ref _itemIndex, -1 );
+
+				return this;
 			}
 
 			private static bool IsLastSlot( int slot ) => slot == SegmentSize - 1;
@@ -334,7 +435,7 @@ namespace HellBrick.Collections
 
 			private Segment GrowSegment()
 			{
-				Segment newTail = new Segment( _queue );
+				Segment newTail = TryPopSegmentFromPool()?.ResetAfterTakingFromPool() ?? new Segment( _queue );
 				newTail.SegmentID = _segmentID + 1;
 				Volatile.Write( ref _next, newTail );
 				return newTail;
