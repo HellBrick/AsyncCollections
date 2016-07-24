@@ -193,7 +193,6 @@ namespace HellBrick.Collections
 			{
 				_items[ slot ] = item;
 				bool wonSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasItem, SlotState.None ) == SlotState.None;
-				HandleLastSlotCapture( slot, wonSlot, ref _queue._itemTail );
 
 				/// 1. If we have won the slot, the item is considered successfully added.
 				/// 2. Otherwise, it's up to the result of <see cref="IAwaiter{T}.TrySetResult(T)"/>.
@@ -201,7 +200,10 @@ namespace HellBrick.Collections
 				///    We also can't blindly read awaiter from the slot, because <see cref="TryTakeAsync(CancellationToken)"/> captures slot *before* filling in the awaiter.
 				///    So we have to spin until it is available.
 				///    And regardless of the awaiter state, we mark the slot as finished because both item and awaiter have visited it.
-				return wonSlot || TrySetAwaiterResultAndMarkSlotAsFinished( item, slot );
+				bool success = wonSlot || TrySetAwaiterResultAndMarkSlotAsFinished( item, slot );
+
+				HandleLastSlotCapture( slot, wonSlot, ref _queue._itemTail );
+				return success;
 			}
 
 			private bool TrySetAwaiterResultAndMarkSlotAsFinished( T item, int slot )
