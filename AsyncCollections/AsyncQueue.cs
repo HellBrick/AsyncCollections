@@ -156,7 +156,15 @@ namespace HellBrick.Collections
 				///    Awaiter could have been canceled by now, and if it has, we should return false to insert item again into another slot.
 				///    We also can't blindly read awaiter from the slot, because <see cref="TryTakeAsync(CancellationToken)"/> captures slot *before* filling in the awaiter.
 				///    So we have to spin until it is available.
-				return !lostSlot || SpinUntilAwaiterIsReady( slot ).TrySetResult( item );
+				///    And regardless of the awaiter state, we mark the slot as finished because both item and awaiter have visited it.
+				return !lostSlot || TrySetAwaiterResultAndMarkSlotAsFinished( item, slot );
+			}
+
+			private bool TrySetAwaiterResultAndMarkSlotAsFinished( T item, int slot )
+			{
+				bool success = SpinUntilAwaiterIsReady( slot ).TrySetResult( item );
+				Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
+				return success;
 			}
 
 			private IAwaiter<T> SpinUntilAwaiterIsReady( int slot )
@@ -197,6 +205,7 @@ namespace HellBrick.Collections
 				else
 				{
 					result = Task.FromResult( _items[ slot ] );
+					Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
 				}
 
 				HandleLastSlotCapture( slot, lostSlot, ref _queue._awaiterTail );
@@ -284,6 +293,7 @@ namespace HellBrick.Collections
 				public const int None = 0;
 				public const int HasItem = 1;
 				public const int HasAwaiter = 2;
+				public const int Finished = 3;
 			}
 		}
 	}
