@@ -22,6 +22,8 @@ public interface IAsyncCollection<T> : IReadOnlyCollection<T>
 }
 ```
 
+A copy of corefx `ValueTask<T>` implementation is used at the moment, it's going to be replaced by the original one when 2.0 is released.
+
 ## AsyncQueue and AsyncStack
 
 These classes provide queue- and stack-based implementations of `IAsyncCollection<T>`.
