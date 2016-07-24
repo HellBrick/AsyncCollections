@@ -192,8 +192,8 @@ namespace HellBrick.Collections
 			private bool TryAddWithoutValidation( T item, int slot )
 			{
 				_items[ slot ] = item;
-				bool lostSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasItem, SlotState.None ) == SlotState.HasAwaiter;
-				HandleLastSlotCapture( slot, lostSlot, ref _queue._itemTail );
+				bool wonSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasItem, SlotState.None ) == SlotState.None;
+				HandleLastSlotCapture( slot, !wonSlot, ref _queue._itemTail );
 
 				/// 1. If we have won the slot, the item is considered successfully added.
 				/// 2. Otherwise, it's up to the result of <see cref="IAwaiter{T}.TrySetResult(T)"/>.
@@ -201,7 +201,7 @@ namespace HellBrick.Collections
 				///    We also can't blindly read awaiter from the slot, because <see cref="TryTakeAsync(CancellationToken)"/> captures slot *before* filling in the awaiter.
 				///    So we have to spin until it is available.
 				///    And regardless of the awaiter state, we mark the slot as finished because both item and awaiter have visited it.
-				return !lostSlot || TrySetAwaiterResultAndMarkSlotAsFinished( item, slot );
+				return wonSlot || TrySetAwaiterResultAndMarkSlotAsFinished( item, slot );
 			}
 
 			private bool TrySetAwaiterResultAndMarkSlotAsFinished( T item, int slot )
@@ -239,8 +239,8 @@ namespace HellBrick.Collections
 				/// The order here differs from what <see cref="TryAdd(T)"/> does: we capture the slot *before* inserting an awaiter.
 				/// We do it to avoid allocating an awaiter / registering the cancellation that we're not gonna need in case we lose.
 				/// This means <see cref="TryAdd(T)"/> can see the default awaiter value, but it is easily solved by spinning until the awaiter is assigned.
-				bool lostSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasAwaiter, SlotState.None ) == SlotState.HasItem;
-				if ( !lostSlot )
+				bool wonSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasAwaiter, SlotState.None ) == SlotState.None;
+				if ( wonSlot )
 				{
 					IAwaiter<T> awaiter = new CompletionSourceAwaiterFactory<T>( cancellationToken ).CreateAwaiter();
 					Volatile.Write( ref _awaiters[ slot ], awaiter );
@@ -252,7 +252,7 @@ namespace HellBrick.Collections
 					Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
 				}
 
-				HandleLastSlotCapture( slot, lostSlot, ref _queue._awaiterTail );
+				HandleLastSlotCapture( slot, !wonSlot, ref _queue._awaiterTail );
 				return result;
 			}
 
