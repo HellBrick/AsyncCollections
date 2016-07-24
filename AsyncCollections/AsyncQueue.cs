@@ -29,6 +29,11 @@ namespace HellBrick.Collections
 		private Segment _head;
 
 		/// <summary>
+		/// The value is positive if there are any active enumerators and negative if any segments are being transferred to the pool.
+		/// </summary>
+		private int _enumerationPoolingBalance = 0;
+
+		/// <summary>
 		/// Initializes a new empty instance of <see cref="AsyncQueue{T}"/>.
 		/// </summary>
 		public AsyncQueue()
@@ -95,7 +100,21 @@ namespace HellBrick.Collections
 			}
 		}
 
-		public Enumerator GetEnumerator() => new Enumerator( this );
+		public Enumerator GetEnumerator()
+		{
+			SpinWait spin = new SpinWait();
+
+			while ( true )
+			{
+				int oldBalance = Volatile.Read( ref _enumerationPoolingBalance );
+				if ( oldBalance >= 0 && Interlocked.CompareExchange( ref _enumerationPoolingBalance, oldBalance + 1, oldBalance ) == oldBalance )
+					break;
+
+				spin.SpinOnce();
+			}
+
+			return new Enumerator( this );
+		}
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator() => new BoxedEnumerator<T, Enumerator>( GetEnumerator() );
 		IEnumerator IEnumerable.GetEnumerator() => ( this as IEnumerable<T> ).GetEnumerator();
@@ -103,9 +122,11 @@ namespace HellBrick.Collections
 		public struct Enumerator : IEnumerator<T>
 		{
 			private SelectManyStructEnumererator<Segment, SegmentEnumerator, T, Segment.Enumerator> _innerEnumerator;
+			private readonly AsyncQueue<T> _queue;
 
 			public Enumerator( AsyncQueue<T> queue )
 			{
+				_queue = queue;
 				_innerEnumerator = new SelectManyStructEnumererator<Segment, SegmentEnumerator, T, Segment.Enumerator>( new SegmentEnumerator( queue ), segment => segment.GetEnumerator() );
 			}
 
@@ -113,8 +134,13 @@ namespace HellBrick.Collections
 			object IEnumerator.Current => Current;
 
 			public bool MoveNext() => _innerEnumerator.MoveNext();
-			public void Dispose() => _innerEnumerator.Dispose();
 			public void Reset() => _innerEnumerator.Reset();
+
+			public void Dispose()
+			{
+				_innerEnumerator.Dispose();
+				Interlocked.Decrement( ref _queue._enumerationPoolingBalance );
+			}
 		}
 
 		private struct SegmentEnumerator : IEnumerator<Segment>
