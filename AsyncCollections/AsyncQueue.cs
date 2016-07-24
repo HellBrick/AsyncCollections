@@ -193,7 +193,7 @@ namespace HellBrick.Collections
 			{
 				_items[ slot ] = item;
 				bool wonSlot = Interlocked.CompareExchange( ref _slotStates[ slot ], SlotState.HasItem, SlotState.None ) == SlotState.None;
-				HandleLastSlotCapture( slot, !wonSlot, ref _queue._itemTail );
+				HandleLastSlotCapture( slot, wonSlot, ref _queue._itemTail );
 
 				/// 1. If we have won the slot, the item is considered successfully added.
 				/// 2. Otherwise, it's up to the result of <see cref="IAwaiter{T}.TrySetResult(T)"/>.
@@ -252,7 +252,7 @@ namespace HellBrick.Collections
 					Volatile.Write( ref _slotStates[ slot ], SlotState.Finished );
 				}
 
-				HandleLastSlotCapture( slot, !wonSlot, ref _queue._awaiterTail );
+				HandleLastSlotCapture( slot, wonSlot, ref _queue._awaiterTail );
 				return result;
 			}
 
@@ -268,14 +268,14 @@ namespace HellBrick.Collections
 			///    So we lose the reference to it by advancing <see cref="AsyncQueue{T}._head"/>.
 			/// </remarks>
 			/// <param name="tailReference">Either <see cref="AsyncQueue{T}._itemTail"/> or <see cref="AsyncQueue{T}._awaiterTail"/>, whichever we're working on right now.</param>
-			private void HandleLastSlotCapture( int slot, bool lostSlot, ref Segment tailReference )
+			private void HandleLastSlotCapture( int slot, bool wonSlot, ref Segment tailReference )
 			{
 				if ( IsLastSlot( slot ) )
 				{
-					Segment nextSegment = lostSlot ? SpinUntilNextSegmentIsReady() : GrowSegment();
+					Segment nextSegment = wonSlot ? GrowSegment() : SpinUntilNextSegmentIsReady();
 					Volatile.Write( ref tailReference, nextSegment );
 
-					if ( lostSlot )
+					if ( !wonSlot )
 						Volatile.Write( ref _queue._head, nextSegment );
 				}
 			}
