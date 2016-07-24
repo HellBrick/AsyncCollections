@@ -108,6 +108,30 @@ namespace HellBrick.Collections.Test
 			values.Should().BeEquivalentTo( items ).And.BeInAscendingOrder();
 		}
 
+		[Fact]
+		public void EnumeratorReturnsItemsInCorrectOrder()
+		{
+			int[] items = Enumerable.Range( 0, _itemsToOverflowSegment * 2 ).ToArray();
+			InsertItems( items );
+			Collection.Should().BeEquivalentTo( items ).And.BeInAscendingOrder();
+		}
+
+		[Fact]
+		public void EnumeratorDoesNotReturnItemsThatHaveBeenRemovedBetweenMoveNextCalls()
+		{
+			InsertItems( 1, 2, 3 );
+			using ( var enumerator = Collection.GetEnumerator() )
+			{
+				enumerator.MoveNext().Should().BeTrue();
+				enumerator.Current.Should().Be( 1 );
+
+				InsertAwaiters( 2 );
+
+				enumerator.MoveNext().Should().BeTrue();
+				enumerator.Current.Should().Be( 3 );
+			}
+		}
+
 		private Task<int>[] InsertAwaiters( int awaiterCount ) => Enumerable.Repeat( 0, awaiterCount ).Select( _ => Collection.TakeAsync() ).ToArray();
 
 		private void InsertItems( params int[] items )
