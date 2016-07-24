@@ -16,7 +16,7 @@ Most of collections here implement this interface (I'd say it pretty much descri
 public interface IAsyncCollection<T> : IReadOnlyCollection<T>
 {
 	void Add( T item );
-	Task<T> TakeAsync( CancellationToken cancellationToken );
+	ValueTask<T> TakeAsync( CancellationToken cancellationToken );
 
 	int AwaiterCount { get; } // An amount of pending item requests
 }
@@ -28,7 +28,7 @@ These classes provide queue- and stack-based implementations of `IAsyncCollectio
 
 ```C#
 AsyncQueue<int> queue = new AsyncQueue<int>();
-Task<int> itemTask = queue.TakeAsync();
+ValueTask<int> itemTask = queue.TakeAsync();
 queue.Add( 42 ); // at this point itemTask completes with Result = 42
 
 AsyncStack<int> stack = new AsyncStack<int>();
@@ -156,7 +156,7 @@ There are multiple ways to achieve the functionality of `AsyncQueue`:
 * `AsyncQueue` itself
 * `AsyncCollection` that wraps `ConcurrentQueue`
 * `Nito.AsyncEx.AsyncCollection` (https://github.com/StephenCleary/AsyncEx) that wraps `ConcurrentQueue`
-* `BlockingCollection` + `Task.FromResult` (this isn't really asynchronous and will starve the thread pool on large consumer count, but still is an interesting thing to compare against)
+* `BlockingCollection` (this isn't really asynchronous and will starve the thread pool on large consumer count, but still is an interesting thing to compare against)
 * `System.Threading.Tasks.Dataflow.BufferBlock`
 
 ```
