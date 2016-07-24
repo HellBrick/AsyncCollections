@@ -84,6 +84,9 @@
     <Compile Include="PrioritizedItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TimerAsyncBatchQueue.cs" />
+    <Compile Include="ValueTask\ConfiguredValueTaskAwaitable.cs" />
+    <Compile Include="ValueTask\ValueTask.cs" />
+    <Compile Include="ValueTask\ValueTaskAwaiter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\AsyncCollections.nuspec" />
