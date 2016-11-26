@@ -78,6 +78,7 @@
     <Compile Include="AsyncBoundedPriorityQueueTest.cs" />
     <Compile Include="AsyncCollectionTakeFromAnyTest.cs" />
     <Compile Include="AsyncCollectionTest.cs" />
+    <Compile Include="PriorityQueueTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

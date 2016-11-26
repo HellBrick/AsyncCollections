@@ -160,4 +160,13 @@ namespace HellBrick.Collections.Test
 	{
 		protected override AsyncStack<int> CreateCollection() => new AsyncStack<int>();
 	}
+
+    [TestClass]
+    public class AsyncPriorityQueueTest : AsyncCollectionTest
+    {
+        protected override IAsyncCollection<int> CreateCollection()
+        {
+            return new AsyncPriorityQueue<int>();
+        }
+    }
 }
