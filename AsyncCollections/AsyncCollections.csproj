@@ -103,13 +103,6 @@
     <Analyzer Include="..\packages\HellBrick.Diagnostics.1.5.0.0\analyzers\dotnet\cs\HellBrick.Diagnostics.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <Target Name="CreateNugetPackage" Condition=" '$(Configuration)' == 'Release' ">
-    <Message Text="Creating Nuget package..." Importance="High" />
-    <Exec Command="&quot;$(SolutionDir)packages\Nuget.PCL.2.8.1\tools\NuGet.exe&quot; pack &quot;$(ProjectPath)&quot; -OutputDirectory ." WorkingDirectory="$(OutDir)" LogStandardErrorAsError="true" ConsoleToMSBuild="true">
-    </Exec>
-  </Target>
-  <Target Name="AfterBuild" DependsOnTargets="CreateNugetPackage">
-  </Target>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
