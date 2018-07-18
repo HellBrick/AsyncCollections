@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\GitLink.3.1.0\build\GitLink.props" Condition="Exists('..\packages\GitLink.3.1.0\build\GitLink.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
@@ -85,7 +84,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\AsyncCollections.nuspec" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -100,15 +98,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\HellBrick.Diagnostics.1.5.0.0\analyzers\dotnet\cs\HellBrick.Diagnostics.dll" />
+    <PackageReference Include="GitLink" Version="3.1.0" PrivateAssets="all" />
+    <PackageReference Include="HellBrick.Diagnostics" Version="1.5.0" PrivateAssets="all" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\GitLink.3.1.0\build\GitLink.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GitLink.3.1.0\build\GitLink.props'))" />
-    <Error Condition="!Exists('..\packages\GitLink.3.1.0\build\GitLink.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\GitLink.3.1.0\build\GitLink.targets'))" />
-  </Target>
-  <Import Project="..\packages\GitLink.3.1.0\build\GitLink.targets" Condition="Exists('..\packages\GitLink.3.1.0\build\GitLink.targets')" />
 </Project>
