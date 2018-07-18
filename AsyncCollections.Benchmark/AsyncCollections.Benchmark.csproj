@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>HellBrick.AsyncCollections.Benchmark</RootNamespace>
-    <TargetFramework>net471</TargetFramework>
+    <TargetFramework>$(NetFxTfm)</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

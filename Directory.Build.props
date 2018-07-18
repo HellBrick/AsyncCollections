@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <NetFxTfm>net471</NetFxTfm>
+  </PropertyGroup>
+</Project>
