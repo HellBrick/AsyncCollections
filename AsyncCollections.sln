@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncCollections", "AsyncCo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncCollections.Test", "AsyncCollections.Test\AsyncCollections.Test.csproj", "{EAA37D17-2AF6-447E-A568-97F061C9D1D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncCollections.Benchmark", "AsyncCollections.Benchmark\AsyncCollections.Benchmark.csproj", "{28550F43-E353-44F0-B145-1688B7C85569}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncCollections.Benchmark", "AsyncCollections.Benchmark\AsyncCollections.Benchmark.csproj", "{28550F43-E353-44F0-B145-1688B7C85569}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{45DBD4B2-E839-4D97-97A8-686E8E6B4645}"
 	ProjectSection(SolutionItems) = preProject
