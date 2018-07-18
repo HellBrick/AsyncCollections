@@ -2,3 +2,4 @@
 /packages/
 *.csproj.user
 /AsyncCollections.sln.ide/
+/.vs/

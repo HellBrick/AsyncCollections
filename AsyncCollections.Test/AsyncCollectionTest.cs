@@ -61,7 +61,7 @@ namespace HellBrick.Collections.Test
 			cancelSource.Cancel();
 
 			Func<Task> asyncAct = () => itemTask;
-			asyncAct.ShouldThrow<TaskCanceledException>();
+			asyncAct.Should().Throw<TaskCanceledException>();
 
 			Collection.Add( 42 );
 			Collection.Count.Should().Be( 1 );

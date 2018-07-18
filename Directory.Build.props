@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <NetFxTfm>net471</NetFxTfm>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+</Project>

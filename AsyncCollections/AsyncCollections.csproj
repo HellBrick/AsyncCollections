@@ -84,7 +84,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\AsyncCollections.nuspec" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -99,24 +98,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\packages\HellBrick.Diagnostics.1.5.0.0\analyzers\dotnet\cs\HellBrick.Diagnostics.dll" />
+    <PackageReference Include="GitLink" Version="3.1.0" PrivateAssets="all" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <Target Name="InstallGitLink">
-    <Message Text="Installing GitLink..." Importance="High" />
-    <Exec Condition="!Exists('$(SolutionDir)\packages\gitlink\')" Command="&quot;$(SolutionDir)packages\Nuget.PCL.2.8.1\tools\NuGet.exe&quot; install gitlink -SolutionDir $(SolutionDir) -ExcludeVersion">
-    </Exec>
-  </Target>
-  <Target Name="RunGitLink" DependsOnTargets="InstallGitLink">
-    <Message Text="GitLink-ing solution..." Importance="High" />
-    <Exec Command="&quot;$(SolutionDir)packages\gitlink\lib\net45\GitLink.exe&quot; $(SolutionDir) -u https://github.com/HellBrick/AsyncCollections" WorkingDirectory="$(OutDir)" LogStandardErrorAsError="true" ConsoleToMSBuild="true">
-    </Exec>
-  </Target>
-  <Target Name="CreateNugetPackage" DependsOnTargets="RunGitLink" Condition=" '$(Configuration)' == 'Release' ">
-    <Message Text="Creating Nuget package..." Importance="High" />
-    <Exec Command="&quot;$(SolutionDir)packages\Nuget.PCL.2.8.1\tools\NuGet.exe&quot; pack &quot;$(ProjectPath)&quot; -OutputDirectory ." WorkingDirectory="$(OutDir)" LogStandardErrorAsError="true" ConsoleToMSBuild="true">
-    </Exec>
-  </Target>
-  <Target Name="AfterBuild" DependsOnTargets="CreateNugetPackage">
-  </Target>
 </Project>
