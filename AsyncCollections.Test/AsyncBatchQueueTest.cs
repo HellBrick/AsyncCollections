@@ -19,7 +19,7 @@ namespace HellBrick.Collections.Test
 		public void ThrowsOnIncorrectBatchSize()
 		{
 			Action act = () => _queue = new AsyncBatchQueue<int>( 0 );
-			act.ShouldThrow<ArgumentOutOfRangeException>();
+			act.Should().Throw<ArgumentOutOfRangeException>();
 		}
 
 		[Fact]
