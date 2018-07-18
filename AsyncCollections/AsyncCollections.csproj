@@ -12,6 +12,7 @@
     <Product>AsyncCollections</Product>
     <Description>This package contains a set of lock-free thread-safe collections designed to be used asynchronously.</Description>
 
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>$(Product)</PackageId>
     <Authors>$(Company)</Authors>
     <PackageProjectUrl>https://github.com/HellBrick/AsyncCollections</PackageProjectUrl>
