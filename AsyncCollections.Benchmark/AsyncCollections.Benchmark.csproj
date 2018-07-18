@@ -7,13 +7,11 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.10.14" />
-    <PackageReference Include="Nito.AsyncEx" Version="3.0.0" />
+    <PackageReference Include="HellBrick.Diagnostics" Version="1.5.0" />
     <PackageReference Include="Microsoft.Tpl.Dataflow" Version="4.5.23" />
+    <PackageReference Include="Nito.AsyncEx" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AsyncCollections\AsyncCollections.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="HellBrick.Diagnostics" Version="1.5.0" />
   </ItemGroup>
 </Project>
