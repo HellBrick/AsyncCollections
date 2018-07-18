@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncCollections", "AsyncCollections\AsyncCollections.csproj", "{61BE7A3D-AC66-434B-8A77-4F3466398CBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncCollections.Test", "AsyncCollections.Test\AsyncCollections.Test.csproj", "{EAA37D17-2AF6-447E-A568-97F061C9D1D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncCollections.Test", "AsyncCollections.Test\AsyncCollections.Test.csproj", "{EAA37D17-2AF6-447E-A568-97F061C9D1D7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncCollections.Benchmark", "AsyncCollections.Benchmark\AsyncCollections.Benchmark.csproj", "{28550F43-E353-44F0-B145-1688B7C85569}"
 EndProject
