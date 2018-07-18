@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncCollections", "AsyncCollections\AsyncCollections.csproj", "{61BE7A3D-AC66-434B-8A77-4F3466398CBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncCollections", "AsyncCollections\AsyncCollections.csproj", "{61BE7A3D-AC66-434B-8A77-4F3466398CBC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AsyncCollections.Test", "AsyncCollections.Test\AsyncCollections.Test.csproj", "{EAA37D17-2AF6-447E-A568-97F061C9D1D7}"
 EndProject
