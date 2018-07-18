@@ -15,7 +15,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>$(Product)</PackageId>
     <Authors>$(Company)</Authors>
-    <PackageProjectUrl>https://github.com/HellBrick/AsyncCollections</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/HellBrick/AsyncCollections</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageTags>async await AsyncCollection AsyncQueue</PackageTags>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
