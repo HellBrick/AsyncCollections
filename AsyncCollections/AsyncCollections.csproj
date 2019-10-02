@@ -1,13 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>HellBrick.Collections</RootNamespace>
-    <TargetFramework>portable-net451+win81+wpa81</TargetFramework>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier>.NETPortable</TargetFrameworkIdentifier>
-    <TargetFrameworkProfile>Profile151</TargetFrameworkProfile>
-    <NugetTargetMoniker>.NETPortable,Version=v0.0,Profile=Profile151</NugetTargetMoniker>
+    <TargetFrameworks>netstandard1.3;netstandard2.0</TargetFrameworks>
 
-    <Version>1.3.8.0</Version>
+    <Version>2.0.0.0</Version>
     <Company>HellBrick</Company>
     <Product>AsyncCollections</Product>
     <Description>This package contains a set of lock-free thread-safe collections designed to be used asynchronously.</Description>
@@ -24,7 +20,4 @@
   <ItemGroup>
     <PackageReference Include="GitLink" Version="3.1.0" PrivateAssets="all" />
   </ItemGroup>
-  <PropertyGroup>
-    <LanguageTargets>$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets</LanguageTargets>
-  </PropertyGroup>
 </Project>
